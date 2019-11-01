@@ -2,3 +2,4 @@ twine
 pytest
 click
 coloredlogs
+pyyaml

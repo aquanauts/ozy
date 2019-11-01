@@ -2,6 +2,7 @@ import logging
 import os
 
 import requests
+import yaml
 from tqdm import tqdm
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,8 +70,25 @@ def ensure_ozy_dirs():
 
 
 def get_ozy_dir() -> str:
-    return f"{os.getenv('HOME')}/.ozy"
+    if 'HOME' in os.environ:
+        return f"{os.environ['HOME']}/.ozy"
+    else:
+        raise OzyException("HOME env variable not found")
 
 
 def get_ozy_bin_dir() -> str:
     return os.path.join(get_ozy_dir(), "bin")
+
+
+def parse_ozy_conf(ozy_file_name):
+    with open(ozy_file_name, "r") as ofnh:
+        yaml_content = yaml.load(ofnh, Loader=yaml.UnsafeLoader)
+        return yaml_content
+
+def softlink(from_command, to_command, ozy_bin_dir, ):
+    # assume this linkage will ONLY be called by ozy
+    path_to_app = os.path.join(ozy_bin_dir, to_command)
+    if os.path.exists(path_to_app):
+        _LOGGER.debug(f"Clobbering symlink path {path_to_app}")
+        os.unlink(path_to_app)
+    os.symlink(from_command, path_to_app)

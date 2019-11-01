@@ -10,7 +10,8 @@ setup(
     install_requires=[
         "Click==7.0",
         "requests==2.22.0",
-        "tqdm", "coloredlogs"
+        "tqdm", "coloredlogs",
+        "pyyaml"
     ],
     entry_points={
         # TODO this needs to be a shim shell script or shim app?
