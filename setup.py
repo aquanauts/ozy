@@ -9,7 +9,8 @@ setup(
     url="http://ozy.aq.tc",
     install_requires=[
         "Click==7.0",
-        "requests==2.22.0"
+        "requests==2.22.0",
+        "tqdm", "coloredlogs"
     ],
     entry_points={
         # TODO this needs to be a shim shell script or shim app?
