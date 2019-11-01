@@ -35,11 +35,11 @@ def init(url):
         # TODO make this nicer! instructions, helpers, etc
 
     # TODO: Copy ourselves there? <tricky>
+    path_to_ozy = os.path.realpath(INVOKED_AS)
+    softlink(from_command=path_to_ozy, to_command='ozy', ozy_bin_dir=ozy_bin_dir)
     user_conf = parse_ozy_conf(ozy_conf_filename)
     for app in user_conf['apps']:
-        softlink(from_command=os.path.realpath(INVOKED_AS),
-                 to_command=app,
-                 ozy_bin_dir=ozy_bin_dir)
+        softlink(from_command=path_to_ozy, to_command=app, ozy_bin_dir=ozy_bin_dir)
     # TODO awesome congratulatory text here
 
 
@@ -49,6 +49,7 @@ if __name__ == "__main__":
     if invoked_as in ('ozy', '__main__.py'):
         main()
     else:
+        coloredlogs.install(fmt='%(message)s', level='INFO')
         tool = find_tool(invoked_as)
         if not tool:
             raise OzyException(f"TODO better, couldn't find {invoked_as}")

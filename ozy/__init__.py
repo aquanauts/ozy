@@ -1,7 +1,9 @@
 import logging
 import os
+import shutil
 from collections import ChainMap
 from tempfile import NamedTemporaryFile
+from typing import BinaryIO
 from zipfile import ZipFile
 
 import requests
@@ -106,7 +108,18 @@ class App:
         return os.path.isdir(self.install_path)
 
     def install(self):
-        self._installer.install(self.install_path)
+        _LOGGER.info("Installing %s %s", self.name, self.version)
+        temp_install_dir = self.install_path + ".tmp"
+        if os.path.exists(temp_install_dir):
+            shutil.rmtree(temp_install_dir)
+        try:
+            self._installer.install(temp_install_dir)
+            if os.path.exists(self.install_path):
+                shutil.rmtree(self.install_path)
+            os.rename(temp_install_dir, self.install_path)
+        except Exception:
+            shutil.rmtree(temp_install_dir)
+            raise
 
     def ensure_installed(self):
         if not self.is_installed():
@@ -142,7 +155,7 @@ def download_to(dest_file_name: str, url: str):
         raise
 
 
-def download_to_file_obj(dest_file_obj: str, url: str):
+def download_to_file_obj(dest_file_obj: BinaryIO, url: str):
     response = requests.get(url, stream=True)
     if not response.ok:
         raise OzyException(f"Unable to fetch url '{url}' - {response}")
