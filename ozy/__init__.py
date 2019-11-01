@@ -39,10 +39,16 @@ def install_if_needed_and_get_path_to_tool(tool):
     return tool.config['path']
 
 
+def load_config():
+    return parse_ozy_conf(f"{get_ozy_dir()}/ozy.conf.yaml")
+
+
 def find_tool(tool):
-    if tool == 'test_nomad':
-        return Tool('test_nomad', dict(path="/bin/ls"))
-    return None
+    config = load_config()
+    if tool in config['apps']:
+        return Tool( tool, config)
+    else:
+        return None
 
 
 def download_to(dest_file_name: str, url: str):
