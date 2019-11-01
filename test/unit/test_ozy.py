@@ -19,3 +19,5 @@ def test_safe_expand():
 def test_bad_safe_expand():
     with pytest.raises(OzyException):
         safe_expand(dict(foo="bar"), "I am templated {baz}")
+
+

@@ -1,11 +1,85 @@
 # ozy
+
+`ozy` is a native Python program that makes it easy for you and your team to share and colloborate on commonly used programs such as Hashicorp's `vault`, `python`, etc. 
+
+## Getting Started
+First, [download ozy](convenient download link here). This will cause `ozy` to install itself details details mking `~/.ozy`, installing itself and the `.ozyconf` file there, and adding that directory to `$PATH`. 
+
+Next, you need to initialize `ozy` with a url which contains your team's blessed set of apps:
+
+```bash
+$ ozy init https://github.com/myteam/ozy/.ozyconf
+``` 
+
+This will cause `ozy` to:
+1) Downloads the `.ozyconf`
+2) Store it in `$USER/.ozyconf`
+3) 
+
+Note, `ozy` will not install the apps listed in the conf file until you use them!
+
+## Running a command
+Assume that your `.ozyconf` has Hashicorp's [nomad](nomad url) in it.
+
+```bash
+$ nomad --version
+ozy is installing version 0.0.10 of nomad from $URL..
+Nomad v0.9.4 (a81aa846a45fb8248551b12616287cb57c418cd6)
+```
+
+## Running a command through ozy
+```bash
+$ ozy run nomad 0.9.4 
+```
+
+##  Getting info on supported commands
+```bash
+$ ozy info
+ozy cache dir path
+ozy conf file path
+Support things:
+   * nomad $VERSION 
+   * overridden vault $VERSION overriden by /path/to/ozy/file
+```
+## Removing a command
+```bash
+$ ozy rm nomad
+```
+The real nomad lives in `~/.cache/ozy/nomad/0.9.4/nomad`. The simlink in `~/.ozy/bin/nomad` points to ozy. `rm` will remove the simlink, which is as good as deleting the executable.  
+
+## Full cleanup
+```bash
+$ ozy clean
+```
+This will remove `~/.cache/ozy`! 
+
+## Updating
+```bash
+$ ozy update
+```
+This will cause ozy to re-fetch your team's ozy config url, and then update any apps that it finds.
+Note that you can do this:
+```bash
+$ ozy update --dry-run 
+```
+Rather than upgrade the apps, it will tell you what it would upgrade. 
+
+## Pinning Versions
+Individual projects can chose to pin versions of apps by creating a .ozy file in the directory that they are in. When you run ozy in that directory, ozy will use the versions listed in that file in preference to the system wide ozy found in `~/.ozy/.ozyconf`
+
+
+
+# Matt's original write-up
+
 Overview
 We need to install a bunch of apps, some external, some our own. We want a nice way to express which apps are installed, where, and with which versions. Specifically:
+
 Hashicorp tools: nomad, terraform, vault
 Concourse tools: fly
 Internal tools: lake, yard
 Additionally some projects might need different versions, so the tools should adapt from whence they’re called.
-Goals
+
+## Goals
 Be super super simple to install and initially set up. Ideally something like `bash $(curl https://ozzy.aq.tc/setup)`.
 Appear to be the tool as wrapped, so if invoked as `fly` will lookup, download, install and then run the right version of fly. (leininger style)
 Allow for a `.ozzy` file in directories that determines what versions of tools are required when running from a directory (or subdirectory therein). If not found, look in ~/.ozzy
@@ -15,8 +89,10 @@ Hashicorp: just a binary in a URL location (where location is templated on versi
 Fly: similarly , just an executable grabbed from concourse. Versions may be tricksie
 Miniconda: a shell script to run with a few magic params to put it in the “right” place. Some complications due to it wanting to source’d into various things...maybe not a priority?
 Yard, lake. Each a conda package which can be installed into a virtual env with the right magic, and then executed via path-to-the-virtualenv/bin/python yard etc
-Design
-Sketch:
+
+## Design
+
+### Sketch:
 Python3 no-deps, single file “ozzy”
 On startup, if run as “ozzy install” or just as “ozzy” with no params:
 Look for ~/.ozzy, if not there go for an install:
