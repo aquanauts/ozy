@@ -1,6 +1,6 @@
 ---
 name: Aquatic Team Configuration
-types:
+templates:
   hashicorp:
     type: single_binary
     url: https://releases.hashicorp.com/{app_name}/{version}/{app_name}_{version}_linux_amd64.zip
@@ -39,6 +39,6 @@ types:
       -----END PGP PUBLIC KEY BLOCK-----
 apps:
   nomad:
-    type: hashicorp
+    template: hashicorp
     app_name: nomad
     version: 0.9.4

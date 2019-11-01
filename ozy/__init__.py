@@ -1,5 +1,6 @@
 import logging
 import os
+from collections import ChainMap
 
 import requests
 import yaml
@@ -21,22 +22,66 @@ def safe_expand(format_params, to_expand):
         raise OzyException(f"Could not find key {ke} in expansion '{to_expand}' with params '{format_params}'")
 
 
-class Tool:
-    def __init__(self, name, config):
+def resolve(config, templates):
+    if 'template' in config:
+        template_name = config['template']
+        if template_name not in templates:
+            raise OzyException(f"Unable to find template '{template_name}'")
+        config = ChainMap(config, templates[template_name])
+    return {key: safe_expand(config, value) for key, value in config.items()}
+
+
+class App:
+    def __init__(self, name, root_config):
         self._name = name
-        self._config = config
+        self._root_config = root_config
+        self._config = resolve(root_config['apps'][name], self._root_config.get('templates', {}))
+        for required_key in ('version', 'type'):
+            if required_key not in self._config:
+                raise OzyException(f"Missing required key '{required_key}' in '{name}'")
+        print(self._config)
+        stop
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def config(self):
+    def config(self) -> dict:
         return self._config
 
+    @property
+    def version(self) -> str:
+        return self._config['version']
 
-def install_if_needed_and_get_path_to_tool(tool):
-    return tool.config['path']
+    @property
+    def type(self) -> str:
+        return self._config['type']
+
+    @property
+    def install_path(self) -> str:
+        return os.path.join(get_ozy_cache_dir(), self.name, self.version)
+
+    @property
+    def executable(self) -> str:
+        return os.path.join(self.install_path, self.name)  # TODO needs to be configurable
+
+    def is_installed(self) -> bool:
+        return os.path.isdir(self.install_path)
+
+    def install(self):
+        if self.install_type != 'single_binary':
+            raise RuntimeError(f'Unsupported installer type {self.install_type}')
+        pass
+
+    def ensure_installed(self):
+        if not self.is_installed():
+            self.install()
+
+
+def install_if_needed_and_get_path_to_tool_and_rename_me(app):
+    app.ensure_installed()
+    return app.executable
 
 
 def load_config():
@@ -46,7 +91,7 @@ def load_config():
 def find_tool(tool):
     config = load_config()
     if tool in config['apps']:
-        return Tool( tool, config)
+        return App(tool, config)
     else:
         return None
 
@@ -71,15 +116,21 @@ def download_to(dest_file_name: str, url: str):
 
 
 def ensure_ozy_dirs():
-    os.makedirs(get_ozy_dir(), exist_ok=True)
-    os.makedirs(get_ozy_bin_dir(), exist_ok=True)
+    [os.makedirs(p, exist_ok=True) for p in (get_ozy_dir(), get_ozy_bin_dir(), get_ozy_cache_dir())]
+
+
+def get_home_dir() -> str:
+    if 'HOME' in os.environ:
+        return os.environ['HOME']
+    raise OzyException("HOME env variable not found")
 
 
 def get_ozy_dir() -> str:
-    if 'HOME' in os.environ:
-        return f"{os.environ['HOME']}/.ozy"
-    else:
-        raise OzyException("HOME env variable not found")
+    return f"{get_home_dir()}/.ozy"
+
+
+def get_ozy_cache_dir() -> str:
+    return os.path.join(os.getenv('XDG_CACHE_HOME', f"{get_home_dir()}/.cache"), 'ozy')
 
 
 def get_ozy_bin_dir() -> str:
@@ -90,6 +141,7 @@ def parse_ozy_conf(ozy_file_name):
     with open(ozy_file_name, "r") as ofnh:
         yaml_content = yaml.load(ofnh, Loader=yaml.UnsafeLoader)
         return yaml_content
+
 
 def softlink(from_command, to_command, ozy_bin_dir, ):
     # assume this linkage will ONLY be called by ozy
