@@ -31,7 +31,8 @@ def resolve(config, templates):
         template_name = config['template']
         if template_name not in templates:
             raise OzyException(f"Unable to find template '{template_name}'")
-        config = ChainMap(config, templates[template_name])
+        config = ChainMap(config,
+                          templates[template_name])  # TODO had these the wrong way round to start with. make a test
     return {key: safe_expand(config, value) for key, value in config.items()}
 
 
@@ -50,6 +51,9 @@ class SingleBinaryZipInstaller(Installer):
     def __init__(self, description, config):
         self._config = config
         ensure_keys(description, self._config, 'app_name', 'url')
+
+    def __str__(self):
+        return f'zip installer from {self._config["url"]}'
 
     def install(self, to_dir):
         os.makedirs(to_dir)
@@ -84,6 +88,9 @@ class App:
         if install_type not in SUPPORTED_INSTALLERS:
             raise OzyException(f"Unsupported installation type '{install_type}'")
         self._installer = SUPPORTED_INSTALLERS[install_type](f'{name} installer {install_type}', self._config)
+
+    def __str__(self):
+        return f'{self.name} {self._config["version"]} ({self._installer})'
 
     @property
     def name(self) -> str:
@@ -132,8 +139,38 @@ def install_if_needed_and_get_path_to_tool_and_rename_me(app):
     return app.executable
 
 
+def walk_up_dirs(path):
+    path = os.path.realpath(path)
+    previous_path = None
+    while path != previous_path:
+        yield path
+        previous_path = path
+        path = os.path.realpath(os.path.join(path, '..'))
+
+
+def apply_overrides(source, destination):
+    for key, value in source.items():
+        if isinstance(value, dict):
+            node = destination.setdefault(key, {})
+            apply_overrides(value, node)
+        else:
+            destination[key] = value
+
+    return destination
+
+
 def load_config():
-    return parse_ozy_conf(f"{get_ozy_dir()}/ozy.conf.yaml")
+    # Annoyingly can't just use a chainmap here as nested maps don't work the way we'd like
+    config = parse_ozy_conf(f"{get_ozy_dir()}/ozy.yaml")
+    ozy_files = []
+    for path in walk_up_dirs(os.getcwd()):
+        conf_file = os.path.join(path, '.ozy.yaml')
+        if os.path.isfile(conf_file):
+            ozy_files.append(conf_file)
+    for path in reversed(ozy_files):
+        apply_overrides(parse_ozy_conf(path), config)
+    _LOGGER.debug(config)
+    return config
 
 
 def find_tool(tool):
@@ -190,6 +227,7 @@ def get_ozy_bin_dir() -> str:
 
 
 def parse_ozy_conf(ozy_file_name):
+    _LOGGER.debug("Parsing config %s", ozy_file_name)
     with open(ozy_file_name, "r") as ofnh:
         yaml_content = yaml.load(ofnh, Loader=yaml.UnsafeLoader)
         return yaml_content

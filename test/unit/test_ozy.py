@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from ozy import safe_expand, OzyException, get_ozy_dir
+from ozy import safe_expand, OzyException, get_ozy_dir, walk_up_dirs
 
 
 def test_safe_expand():
@@ -32,3 +32,12 @@ def test_ozy_dirs():
         get_ozy_dir()
     os.environ['HOME'] = home
 
+
+def test_walk_up_dirs():
+    test_path = os.path.join(os.path.sep, 'one', 'two', 'three')
+    assert [
+               os.path.join(os.path.sep, 'one', 'two', 'three'),
+               os.path.join(os.path.sep, 'one', 'two'),
+               os.path.join(os.path.sep, 'one'),
+               os.path.sep
+           ] == [x for x in walk_up_dirs(test_path)]
