@@ -1,13 +1,13 @@
-#!/bin/bash
+#!/usr/bin/env python
 
-set -euo pipefail
+import os
+import sys
 
-#TODO: replace realwith as it is not a standard utility
-OZYDIR="$(
-  dirname $(realpath "$0")
-)/.."
+OZY_DIR = os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 
-export PYTHONPATH="${OZYDIR}"
-make --quiet -C "${OZYDIR}" deps
-exec "${OZYDIR}/.venv/bin/python3.7" \
-    "${OZYDIR}/ozy/__main__.py" "$0" "$@"
+OZY_PYTHON = os.path.join(OZY_DIR, '.venv', 'bin', 'python3.7')
+os.environ['PYTHONPATH'] = OZY_DIR
+# We pass argv[0] again to the python executable: if we don't use OZY_PYTHON as argv[0], virtualenv flips out.
+# As the ozy script needs to know the name it was invoked as, we pass all of argv again.
+# i.e. if invoked as "nomad --version" we will "path/to/python path/to/ozy/__main__.py nomad --version
+os.execve(OZY_PYTHON, [OZY_PYTHON, os.path.join(OZY_DIR, 'ozy', '__main__.py')] + sys.argv, os.environ)

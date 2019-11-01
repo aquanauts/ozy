@@ -1,8 +1,9 @@
-import coloredlogs, logging
 import os
 import sys
 
 import click
+import coloredlogs
+import logging
 
 from ozy import OzyException, find_tool, install_if_needed_and_get_path_to_tool_and_rename_me, download_to, \
     get_ozy_dir, ensure_ozy_dirs, get_ozy_bin_dir, parse_ozy_conf, softlink
