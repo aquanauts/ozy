@@ -1,0 +1,32 @@
+---
+resources:
+- name: ozy
+  type: git
+  source:
+    username: ((concourse.username))
+    password: ((concourse.token))
+    uri: https://github.aq.tc/aquatic/ozy.git
+
+
+jobs:
+  - name: ozy tests
+    public: true
+    plan:
+      - get: ozy
+        trigger: true
+      - task: run-tests
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: artifactory.aq.tc/aquatic/coralpy
+              username: ((concourse.username))
+              password: ((concourse.password))
+          inputs:
+            - name: lake
+          run:
+            path: ozy/ci/ci.sh
+            params:
+              ARTIFACTORY_USERNAME: ((concourse.username))
+              ARTIFACTORY_PASSWORD: ((concourse.password))
