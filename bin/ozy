@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -euo pipefail
+
+OZYDIR="$(
+  cd "$(dirname "$0")"/..
+  pwd -P
+)"
+
+export PYTHONPATH="${OZYDIR}"
+make --quiet -C "${OZYDIR}" deps
+exec "${OZYDIR}/.venv/bin/python3.7" \
+    "${OZYDIR}/ozy/__main__.py" "$0" "$@"
