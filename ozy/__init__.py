@@ -1,6 +1,8 @@
 import logging
 import os
 from collections import ChainMap
+from tempfile import NamedTemporaryFile
+from zipfile import ZipFile
 
 import requests
 import yaml
@@ -31,16 +33,54 @@ def resolve(config, templates):
     return {key: safe_expand(config, value) for key, value in config.items()}
 
 
+def ensure_keys(name, config, *keys):
+    for required_key in keys:
+        if required_key not in config:
+            raise OzyException(f"Missing required key '{required_key}' in '{name}'")
+
+
+class Installer:
+    def install(self, to_dir):
+        raise RuntimeError("Must be overridden")
+
+
+class SingleBinaryZipInstaller(Installer):
+    def __init__(self, description, config):
+        self._config = config
+        ensure_keys(description, self._config, 'app_name', 'url')
+
+    def install(self, to_dir):
+        os.makedirs(to_dir)
+        url = self._config['url']
+        app_path = os.path.join(to_dir, self._config['app_name'])
+        with NamedTemporaryFile() as temp_file:
+            download_to_file_obj(temp_file, url)
+            temp_file.flush()
+            zf = ZipFile(temp_file.name)
+            contents = zf.namelist()
+            if len(contents) != 1:
+                raise OzyException(f"More than one file in the zipfile at {url}! ({contents})")
+            with open(app_path, 'wb') as out_file:
+                with zf.open(contents[0]) as in_file:
+                    out_file.write(in_file.read())
+            os.chmod(app_path, 0o774)
+
+
+SUPPORTED_INSTALLERS = dict(
+    single_binary_zip=SingleBinaryZipInstaller
+)
+
+
 class App:
     def __init__(self, name, root_config):
         self._name = name
         self._root_config = root_config
         self._config = resolve(root_config['apps'][name], self._root_config.get('templates', {}))
-        for required_key in ('version', 'type'):
-            if required_key not in self._config:
-                raise OzyException(f"Missing required key '{required_key}' in '{name}'")
-        print(self._config)
-        stop
+        ensure_keys(name, self._config, 'version', 'type')
+        install_type = self._config['type']
+        if install_type not in SUPPORTED_INSTALLERS:
+            raise OzyException(f"Unsupported installation type '{install_type}'")
+        self._installer = SUPPORTED_INSTALLERS[install_type](f'{name} installer {install_type}', self._config)
 
     @property
     def name(self) -> str:
@@ -55,10 +95,6 @@ class App:
         return self._config['version']
 
     @property
-    def type(self) -> str:
-        return self._config['type']
-
-    @property
     def install_path(self) -> str:
         return os.path.join(get_ozy_cache_dir(), self.name, self.version)
 
@@ -70,9 +106,7 @@ class App:
         return os.path.isdir(self.install_path)
 
     def install(self):
-        if self.install_type != 'single_binary':
-            raise RuntimeError(f'Unsupported installer type {self.install_type}')
-        pass
+        self._installer.install(self.install_path)
 
     def ensure_installed(self):
         if not self.is_installed():
@@ -98,21 +132,25 @@ def find_tool(tool):
 
 def download_to(dest_file_name: str, url: str):
     _LOGGER.debug("Downloading %s to %s", url, dest_file_name)
-    response = requests.get(url, stream=True)
-    if not response.ok:
-        raise OzyException(f"Unable to fetch url '{url}' - {response}")
-    total_size = int(response.headers.get('content-length', 0))
     dest_file_temp = dest_file_name + ".tmp"
     try:
         with open(dest_file_temp, 'wb') as dest_file_obj:
-            with tqdm(total=total_size, unit='iB', unit_scale=True) as t:
-                for data in response.iter_content(DOWNLOAD_CHUNK_SIZE):
-                    t.update(len(data))
-                    dest_file_obj.write(data)
+            download_to_file_obj(dest_file_obj, url)
         os.rename(dest_file_temp, dest_file_name)
     except Exception:
         os.unlink(dest_file_temp)
         raise
+
+
+def download_to_file_obj(dest_file_obj: str, url: str):
+    response = requests.get(url, stream=True)
+    if not response.ok:
+        raise OzyException(f"Unable to fetch url '{url}' - {response}")
+    total_size = int(response.headers.get('content-length', 0))
+    with tqdm(total=total_size, unit='iB', unit_scale=True) as t:
+        for data in response.iter_content(DOWNLOAD_CHUNK_SIZE):
+            t.update(len(data))
+            dest_file_obj.write(data)
 
 
 def ensure_ozy_dirs():

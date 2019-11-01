@@ -2,7 +2,7 @@
 name: Aquatic Team Configuration
 templates:
   hashicorp:
-    type: single_binary
+    type: single_binary_zip
     url: https://releases.hashicorp.com/{app_name}/{version}/{app_name}_{version}_linux_amd64.zip
     sha256: https://releases.hashicorp.com/{app_name}/{version}/{app_name}_{version}_SHA256SUMS
     sha256_signature: https://releases.hashicorp.com/{app_name}/{version}/{app_name}_{app_name}_SHA256SUMS.sig
