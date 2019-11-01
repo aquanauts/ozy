@@ -9,7 +9,7 @@ resources:
 
 
 jobs:
-  - name: ozy tests
+  - name: ozy tests and publish
     public: true
     plan:
       - get: ozy
@@ -24,9 +24,9 @@ jobs:
               username: ((concourse.username))
               password: ((concourse.password))
           inputs:
-            - name: lake
+            - name: ozy
           run:
             path: ozy/ci/ci.sh
-            params:
-              ARTIFACTORY_USERNAME: ((concourse.username))
-              ARTIFACTORY_PASSWORD: ((concourse.password))
+          params:
+            ARTIFACTORY_USERNAME: ((concourse.username))
+            ARTIFACTORY_PASSWORD: ((concourse.password))
