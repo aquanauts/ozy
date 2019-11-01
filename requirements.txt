@@ -3,3 +3,4 @@ pytest
 click
 coloredlogs
 pyyaml
+pyinstaller

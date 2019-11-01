@@ -7,6 +7,7 @@ PIP := $(VENV)/bin/pip
 DEPS := $(VENV)/.deps
 PYTHON := $(VENV)/bin/python3
 TWINE := $(VENV)/bin/twine
+PYINSTALLER := $(VENV)/bin/pyinstaller
 PYTHON_CMD := PYTHONPATH=$(shell pwd) $(PYTHON)
 PACKAGE_NAME := ozy
 TEST_TYPES=$(filter-out __pycache__,$(notdir $(wildcard test/*)))
@@ -51,6 +52,11 @@ publish-pip: clean package ## build and publish the package to artifactory
 
 .PHONY: publish
 publish: clean package publish-pip ## publish pip
+
+.PHONY: dist
+dist: deps  ## create distribution
+	$(PYINSTALLER) --onefile bin/ozy
+
 
 .PHONY: clean
 clean: ## remove venv and flush out pycache TODO (will fail on mac because --no-run-if-empty isn't bsd xargs)

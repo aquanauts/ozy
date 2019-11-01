@@ -1,4 +1,5 @@
 import os
+import shutil
 import sys
 
 import click
@@ -11,7 +12,8 @@ from ozy import OzyException, find_tool, install_if_needed_and_get_path_to_tool_
 
 _LOGGER = logging.getLogger(__name__)
 
-INVOKED_AS = sys.argv[1]  # TODO ... make more @clicky
+PATH_TO_ME = None  # TODO find a better way
+IS_SINGLE_FILE = False  # TODO find a better way
 
 
 @click.group()
@@ -36,7 +38,6 @@ def init(url):
     check_path(ozy_bin_dir)
     root_conf = parse_ozy_conf(ozy_conf_filename)  ## TODO think how this interacts with local config files
 
-    # TODO: Copy ourselves there? <tricky>
     symlink_binaries(ozy_bin_dir, root_conf)
     # TODO awesome congratulatory text here
 
@@ -45,10 +46,19 @@ def init(url):
 
 
 def symlink_binaries(ozy_bin_dir, config):
-    path_to_ozy = os.path.realpath(INVOKED_AS)
-    softlink(from_command=path_to_ozy, to_command='ozy', ozy_bin_dir=ozy_bin_dir)
+    global PATH_TO_ME, IS_SINGLE_FILE
+    if IS_SINGLE_FILE:
+        dest_filename = os.path.join(ozy_bin_dir, 'ozy')
+        _LOGGER.debug("Copying single-file ozy distribution")
+        if os.path.exists(dest_filename):
+            os.unlink(dest_filename)
+        shutil.copyfile(PATH_TO_ME, dest_filename)
+        shutil.copymode(PATH_TO_ME, dest_filename)
+    else:
+        _LOGGER.debug("Symlinking dev ozy")
+        softlink(from_command=PATH_TO_ME, to_command='ozy', ozy_bin_dir=ozy_bin_dir)
     for app in config['apps']:
-        if not softlink(from_command=path_to_ozy, to_command=app, ozy_bin_dir=ozy_bin_dir):
+        if not softlink(from_command='ozy', to_command=app, ozy_bin_dir=ozy_bin_dir):
             _LOGGER.info("Supporting app '%s'", app)
 
 
@@ -102,15 +112,22 @@ def sync():
     symlink_binaries(get_ozy_bin_dir(), load_config())
 
 
-if __name__ == "__main__":
-    invoked_as = os.path.basename(sys.argv[1])
-    sys.argv = [sys.argv[0]] + sys.argv[2:]
+def app_main(argv0, arguments, is_single_file):
+    global PATH_TO_ME, IS_SINGLE_FILE
+    PATH_TO_ME = os.path.realpath(argv0)
+    IS_SINGLE_FILE = is_single_file
+
+    invoked_as = os.path.basename(argv0)
     if invoked_as in ('ozy', '__main__.py'):
-        main(prog_name='ozy')
+        main(prog_name='ozy', args=arguments)
     else:
         coloredlogs.install(fmt='%(message)s', level='INFO')
         tool = find_tool(invoked_as)
         if not tool:
             raise OzyException(f"TODO better, couldn't find {invoked_as}")
         path = install_if_needed_and_get_path_to_tool_and_rename_me(tool)
-        os.execv(path, [path] + sys.argv[1:])
+        os.execv(path, [path] + arguments)
+
+
+if __name__ == "__main__":
+    app_main(sys.argv[1], sys.argv[2:], False)
