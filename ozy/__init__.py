@@ -55,6 +55,7 @@ class SingleBinaryZipInstaller(Installer):
         os.makedirs(to_dir)
         url = self._config['url']
         app_path = os.path.join(to_dir, self._config['app_name'])
+        # TODO support sha256, sha256_signature and sha256_gpg_key
         with NamedTemporaryFile() as temp_file:
             download_to_file_obj(temp_file, url)
             temp_file.flush()
@@ -194,10 +195,30 @@ def parse_ozy_conf(ozy_file_name):
         return yaml_content
 
 
-def softlink(from_command, to_command, ozy_bin_dir, ):
+def softlink(from_command, to_command, ozy_bin_dir):
     # assume this linkage will ONLY be called by ozy
     path_to_app = os.path.join(ozy_bin_dir, to_command)
-    if os.path.exists(path_to_app):
+    was_there = os.path.exists(path_to_app)
+    if was_there:
         _LOGGER.debug(f"Clobbering symlink path {path_to_app}")
         os.unlink(path_to_app)
     os.symlink(from_command, path_to_app)
+    return was_there
+
+
+def load_ozy_user_conf():
+    user_conf_file = get_user_conf_file()
+    user_conf = dict()
+    if os.path.exists(user_conf_file):
+        user_conf = parse_ozy_conf(user_conf_file)
+    return user_conf
+
+
+def save_ozy_user_conf(config):
+    with open(get_user_conf_file(), 'w') as user_conf_file_obj:
+        yaml.dump(config, user_conf_file_obj)
+
+
+def get_user_conf_file():
+    user_conf_file = f"{get_ozy_dir()}/ozy.user.conf.yaml"
+    return user_conf_file

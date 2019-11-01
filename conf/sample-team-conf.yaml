@@ -42,3 +42,11 @@ apps:
     template: hashicorp
     app_name: nomad
     version: 0.9.4
+  vault:
+    template: hashicorp
+    app_name: vault
+    version: 1.2.3
+  terraform:
+    template: hashicorp
+    app_name: terraform
+    version: 0.12.13
