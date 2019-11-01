@@ -16,3 +16,5 @@ curl -u"${ARTIFACTORY_USERNAME}:${ARTIFACTORY_PASSWORD}" \
   -T dist/ozy "https://artifactory.aq.tc/artifactory/core-generic-base-local/ozy"
 curl -u"${ARTIFACTORY_USERNAME}:${ARTIFACTORY_PASSWORD}" \
   -T conf/sample-team-conf.yaml "https://artifactory.aq.tc/artifactory/core-generic-base-local/ozy.yaml"
+curl -u"${ARTIFACTORY_USERNAME}:${ARTIFACTORY_PASSWORD}" \
+  -T bin/install.sh "https://artifactory.aq.tc/artifactory/core-generic-base-local/install-ozy"
