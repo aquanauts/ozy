@@ -258,5 +258,5 @@ def save_ozy_user_conf(config):
 
 
 def get_user_conf_file():
-    user_conf_file = f"{get_ozy_dir()}/ozy.user.conf.yaml"
+    user_conf_file = f"{get_ozy_dir()}/ozy.user.yaml"
     return user_conf_file
