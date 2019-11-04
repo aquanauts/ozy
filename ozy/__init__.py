@@ -1,6 +1,7 @@
 import logging
 import os
 import shutil
+import tarfile
 from collections import ChainMap
 from tempfile import NamedTemporaryFile
 from typing import BinaryIO
@@ -73,8 +74,28 @@ class SingleBinaryZipInstaller(Installer):
             os.chmod(app_path, 0o774)
 
 
+class TarballInstaller(Installer):
+    def __init__(self, description, config):
+        self._config = config
+        ensure_keys(description, self._config, 'url')
+
+    def __str__(self):
+        return f'tar installer from {self._config["url"]}'
+
+    def install(self, to_dir):
+        os.makedirs(to_dir)
+        url = self._config['url']
+        # TODO support sha256, sha256_signature and sha256_gpg_key
+        with NamedTemporaryFile() as temp_file:
+            download_to_file_obj(temp_file, url)
+            temp_file.flush()
+            tf = tarfile.open(temp_file.name, 'r')
+            tf.extractall(to_dir)
+
+
 SUPPORTED_INSTALLERS = dict(
-    single_binary_zip=SingleBinaryZipInstaller
+    single_binary_zip=SingleBinaryZipInstaller,
+    tarball_installer=TarballInstaller
 )
 
 
@@ -83,6 +104,7 @@ class App:
         self._name = name
         self._root_config = root_config
         self._config = resolve(root_config['apps'][name], self._root_config.get('templates', {}))
+        self._executable_path = self._config.get('executable_path', self.name)
         ensure_keys(name, self._config, 'version', 'type')
         install_type = self._config['type']
         if install_type not in SUPPORTED_INSTALLERS:
@@ -110,7 +132,7 @@ class App:
 
     @property
     def executable(self) -> str:
-        return os.path.join(self.install_path, self.name)  # TODO needs to be configurable
+        return os.path.join(self.install_path, self._executable_path)
 
     def is_installed(self) -> bool:
         return os.path.isdir(self.install_path)
