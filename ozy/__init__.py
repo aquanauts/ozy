@@ -3,6 +3,7 @@ import os
 import shutil
 import tarfile
 from collections import ChainMap
+from subprocess import check_call
 from tempfile import NamedTemporaryFile
 from typing import BinaryIO
 from zipfile import ZipFile
@@ -21,6 +22,10 @@ class OzyException(Exception):
 
 
 def safe_expand(format_params, to_expand):
+    if isinstance(to_expand, list):
+        return [safe_expand(format_params, x) for x in to_expand]
+    elif not isinstance(to_expand, str):
+        return to_expand
     try:
         return to_expand.format(**format_params)
     except KeyError as ke:
@@ -122,10 +127,31 @@ class SingleFileInstaller(Installer):
         os.chmod(app_path, 0o774)
 
 
+class ShellInstaller(Installer):
+    def __init__(self, name, config):
+        super().__init__(name, config, 'url', 'shell_args')
+
+    def __str__(self):
+        return f'shell file installer from {self.config("url")}'
+
+    def install(self, to_dir):
+        os.makedirs(to_dir)
+        url = self.config('url')
+        with NamedTemporaryFile(delete=False) as temp_file:
+            download_to_file_obj(temp_file, url)
+            temp_file.close()
+            os.chmod(temp_file.name, 0o774)
+            env = os.environ.copy()
+            env['INSTALL_DIR'] = to_dir
+            check_call([temp_file.name] + self.config("shell_args"), env=env)
+            os.unlink(temp_file.name)
+
+
 SUPPORTED_INSTALLERS = dict(
     single_binary_zip=SingleBinaryZipInstaller,
     tarball=TarballInstaller,
-    single_file=SingleFileInstaller
+    single_file=SingleFileInstaller,
+    shell_install=ShellInstaller
 )
 
 
@@ -135,6 +161,7 @@ class App:
         self._root_config = root_config
         self._config = resolve(root_config['apps'][name], self._root_config.get('templates', {}))
         self._executable_path = self._config.get('executable_path', self.name)
+        self._relocatable = self._config.get('relocatable', True)
         ensure_keys(name, self._config, 'version', 'type')
         install_type = self._config['type']
         if install_type not in SUPPORTED_INSTALLERS:
@@ -169,17 +196,27 @@ class App:
 
     def install(self):
         _LOGGER.info("Installing %s %s", self.name, self.version)
-        temp_install_dir = self.install_path + ".tmp"
-        if os.path.exists(temp_install_dir):
-            shutil.rmtree(temp_install_dir)
-        try:
-            self._installer.install(temp_install_dir)
+        if not self._relocatable:
+            _LOGGER.debug("Installing directly to final path")
             if os.path.exists(self.install_path):
                 shutil.rmtree(self.install_path)
-            os.rename(temp_install_dir, self.install_path)
-        except Exception:
-            shutil.rmtree(temp_install_dir)
-            raise
+            try:
+                self._installer.install(self.install_path)
+            except Exception:
+                shutil.rmtree(self.install_path)
+                raise
+        else:
+            temp_install_dir = self.install_path + ".tmp"
+            if os.path.exists(temp_install_dir):
+                shutil.rmtree(temp_install_dir)
+            try:
+                self._installer.install(temp_install_dir)
+                if os.path.exists(self.install_path):
+                    shutil.rmtree(self.install_path)
+                os.rename(temp_install_dir, self.install_path)
+            except Exception:
+                shutil.rmtree(temp_install_dir)
+                raise
 
     def ensure_installed(self):
         if not self.is_installed():

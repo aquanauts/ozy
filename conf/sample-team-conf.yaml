@@ -71,3 +71,14 @@ apps:
     version: 1.24.1
     type: single_file
     url: https://github.com/docker/compose/releases/download/{version}/docker-compose-Linux-x86_64
+  conda:
+    version: 4.7.12
+    type: shell_install
+    relocatable: false
+    url: https://repo.anaconda.com/miniconda/Miniconda3-{version}-Linux-x86_64.sh
+    shell_args:
+      - -u
+      - -b
+      - -p
+      - $INSTALL_DIR
+    executable_path: bin/conda

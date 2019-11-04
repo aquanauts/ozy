@@ -126,7 +126,11 @@ def app_main(path_to_ozy, argv0, arguments, is_single_file):
         if not tool:
             raise OzyException(f"TODO better, couldn't find {invoked_as}")
         path = install_if_needed_and_get_path_to_tool_and_rename_me(tool)
-        os.execv(path, [path] + arguments)
+        try:
+            os.execv(path, [path] + arguments)
+        except Exception as e:
+            _LOGGER.error("Unable to execute %s: %s", path, e)
+            raise
 
 
 if __name__ == "__main__":
