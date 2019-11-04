@@ -52,7 +52,7 @@ def symlink_binaries(ozy_bin_dir, config):
     global PATH_TO_ME, IS_SINGLE_FILE
     if IS_SINGLE_FILE:
         dest_filename = os.path.join(ozy_bin_dir, 'ozy')
-        if os.path.samefile(PATH_TO_ME, dest_filename):
+        if os.path.exists(dest_filename) and os.path.samefile(PATH_TO_ME, dest_filename):
             _LOGGER.debug("Not copying anything as we're already in the right place")
         else:
             _LOGGER.debug("Copying single-file ozy distribution")
