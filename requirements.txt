@@ -5,3 +5,4 @@ coloredlogs
 pyinstaller
 pyyaml
 requests
+tqdm
