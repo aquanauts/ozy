@@ -1,10 +1,10 @@
+import logging
 import os
 import shutil
 import sys
 
 import click
 import coloredlogs
-import logging
 
 from ozy import OzyException, find_tool, install_if_needed_and_get_path_to_tool_and_rename_me, download_to, \
     get_ozy_dir, ensure_ozy_dirs, get_ozy_bin_dir, parse_ozy_conf, softlink, save_ozy_user_conf, load_ozy_user_conf, \
@@ -112,9 +112,9 @@ def sync():
     symlink_binaries(get_ozy_bin_dir(), load_config())
 
 
-def app_main(argv0, arguments, is_single_file):
+def app_main(path_to_ozy, argv0, arguments, is_single_file):
     global PATH_TO_ME, IS_SINGLE_FILE
-    PATH_TO_ME = os.path.realpath(argv0)
+    PATH_TO_ME = os.path.realpath(path_to_ozy)
     IS_SINGLE_FILE = is_single_file
 
     invoked_as = os.path.basename(argv0)
@@ -130,4 +130,4 @@ def app_main(argv0, arguments, is_single_file):
 
 
 if __name__ == "__main__":
-    app_main(sys.argv[1], sys.argv[2:], False)
+    app_main(sys.argv[1], sys.argv[1], sys.argv[2:], False)
