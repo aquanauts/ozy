@@ -35,14 +35,17 @@ def init(url):
     ozy_conf_filename = f"{get_ozy_dir()}/ozy.yaml"
     download_to(ozy_conf_filename, url)
     ozy_bin_dir = get_ozy_bin_dir()
-    check_path(ozy_bin_dir)
     root_conf = parse_ozy_conf(ozy_conf_filename)  ## TODO think how this interacts with local config files
 
     symlink_binaries(ozy_bin_dir, root_conf)
-    # TODO awesome congratulatory text here
-
     user_conf['url'] = url
     save_ozy_user_conf(user_conf)
+
+    if check_path(ozy_bin_dir):
+        _LOGGER.info("ozy is installed, but needs a little more setup work:")
+        show_path_warning(ozy_bin_dir)
+    else:
+        _LOGGER.info("ozy is installed and is ready to run")
 
 
 def symlink_binaries(ozy_bin_dir, config):
@@ -62,12 +65,23 @@ def symlink_binaries(ozy_bin_dir, config):
             _LOGGER.info("Supporting app '%s'", app)
 
 
+def show_path_warning(ozy_bin_dir):
+    _LOGGER.warning("-" * 80)
+    _LOGGER.warning("Please ensure '%s' is on your path", ozy_bin_dir)
+    _LOGGER.info("bash shell users:")
+    _LOGGER.info("  bash$  echo -e '# ozy support\\nexport PATH=%s:$PATH' >> ~/.bashrc")
+    _LOGGER.info("  then restart your shell sessions")
+    _LOGGER.info("zsh shell users:")
+    _LOGGER.info("  zsh$  # some kind of wizardry here TODO!")
+    _LOGGER.info("fish shell users: ")
+    _LOGGER.info("  fish$  set --universal fish_user_paths %s $fish_user_paths", ozy_bin_dir)
+    _LOGGER.warning("-" * 80)
+
+
 def check_path(ozy_bin_dir):
     real_paths = set(os.path.realpath(path) for path in os.getenv("PATH").split(":"))
-    if os.path.realpath(ozy_bin_dir) not in real_paths:
-        _LOGGER.warning("Please place '%s' on your path", ozy_bin_dir)
-        # TODO make this nicer! instructions, helpers, etc
-    return ozy_bin_dir
+    if os.path.realpath(ozy_bin_dir) in real_paths:
+        return True
 
 
 @main.command()
@@ -92,6 +106,9 @@ def update(url=None):
 def info():
     """Print information about the installation and configuration."""
     _LOGGER.info("ozy v0.0.0")  # TODO version
+    ozy_bin_dir = get_ozy_bin_dir()
+    if not check_path(ozy_bin_dir):
+        show_path_warning(ozy_bin_dir)
     user_config = load_ozy_user_conf()
     _LOGGER.info("Team URL: %s", user_config.get("url", "(unset)"))
     config = load_config()
