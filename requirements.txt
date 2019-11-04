@@ -1,5 +1,7 @@
 pytest
+
 click
 coloredlogs
-pyyaml
 pyinstaller
+pyyaml
+requests
