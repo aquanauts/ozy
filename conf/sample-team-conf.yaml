@@ -1,6 +1,13 @@
 ---
 name: Aquatic Team Configuration
 templates:
+  aquatic_conda:
+    type: conda
+    relocatable: false
+    channels:
+      - https://artifactory.aq.tc/artifactory/api/conda/core-conda-rel
+      - https://artifactory.aq.tc/artifactory/api/conda/ext-conda-rel
+      - conda-forge
   hashicorp:
     type: single_binary_zip
     url: https://releases.hashicorp.com/{app_name}/{version}/{app_name}_{version}_linux_amd64.zip
@@ -82,3 +89,8 @@ apps:
       - -p
       - $INSTALL_DIR
     executable_path: bin/conda
+  yard:
+    template: aquatic_conda
+    version: '1415'
+    package: aq-yard
+    executable_path: bin/yard

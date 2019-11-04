@@ -147,11 +147,31 @@ class ShellInstaller(Installer):
             os.unlink(temp_file.name)
 
 
+class CondaInstaller(Installer):
+    def __init__(self, name, config):
+        super().__init__(name, config, 'package', 'version', channels=[])
+
+    def __str__(self):
+        return f'conda app installer for {self.config("package")}'
+
+    def install(self, to_dir):
+        os.makedirs(to_dir)
+        channels = []
+        for channel in self.config('channels'):
+            channels += ['-c', channel]
+        args = (['conda', 'create', '-y'] + channels
+                + ['-p', to_dir, f'{self.config("package")}={self.config("version")}'])
+        _LOGGER.debug("Executing %s", " ".join(args))
+        check_call(
+            args)
+
+
 SUPPORTED_INSTALLERS = dict(
     single_binary_zip=SingleBinaryZipInstaller,
     tarball=TarballInstaller,
     single_file=SingleFileInstaller,
-    shell_install=ShellInstaller
+    shell_install=ShellInstaller,
+    conda=CondaInstaller
 )
 
 

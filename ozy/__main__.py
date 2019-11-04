@@ -102,6 +102,15 @@ def info():
 
 
 @main.command()
+def install_all():
+    """Ensures all applications are installed at their current prevailing versions."""
+    config = load_config()
+    for app_name in config['apps']:
+        app = App(app_name, config)
+        app.ensure_installed()
+
+
+@main.command()
 def sync():
     """
     Synchronise any local changes.
