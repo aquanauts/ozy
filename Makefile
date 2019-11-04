@@ -4,10 +4,8 @@ VENV = .venv
 PIP := $(VENV)/bin/pip
 DEPS := $(VENV)/.deps
 PYTHON := $(VENV)/bin/python3
-TWINE := $(VENV)/bin/twine
 PYINSTALLER := $(VENV)/bin/pyinstaller
 PYTHON_CMD := PYTHONPATH=$(shell pwd) $(PYTHON)
-PACKAGE_NAME := ozy
 TEST_TYPES=$(filter-out __pycache__,$(notdir $(wildcard test/*)))
 
 .PHONY: help
@@ -17,7 +15,7 @@ help: ## me
 $(VENV):
 	$(SYS_PYTHON) -m venv $(VENV)
 
-$(DEPS): $(VENV) requirements.txt setup.py
+$(DEPS): $(VENV) requirements.txt
 	$(PIP) install --upgrade pip
 	$(PIP) install -r requirements.txt
 	touch $(DEPS)
@@ -36,23 +34,9 @@ watch: $(DEPS) ## run unit tests in a continuous loop
 $(TEST_TYPES): % : $(DEPS)
 	$(PYTHON_CMD) -m pytest test/$@
 
-
-.PHONY: package-pip
-package-pip: test
-	$(PYTHON) setup.py sdist
-
-.PHONY: publish-pip
-publish-pip: clean package ## build and publish the package to artifactory
-	$(TWINE) upload --repository-url https://artifactory.aq.tc/artifactory/api/pypi/core-pypi dist/$(PACKAGE_NAME)-*
-
-
-.PHONY: publish
-publish: clean package publish-pip ## publish pip
-
 .PHONY: dist
 dist: deps  ## create distribution
 	$(PYINSTALLER) --onefile bin/ozy
-
 
 .PHONY: clean
 clean: ## remove venv and flush out pycache TODO (will fail on mac because --no-run-if-empty isn't bsd xargs)
