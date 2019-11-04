@@ -140,10 +140,9 @@ class ShellInstaller(Installer):
         with NamedTemporaryFile(delete=False) as temp_file:
             download_to_file_obj(temp_file, url)
             temp_file.close()
-            os.chmod(temp_file.name, 0o774)
             env = os.environ.copy()
             env['INSTALL_DIR'] = to_dir
-            check_call([temp_file.name] + self.config("shell_args"), env=env)
+            check_call(["/bin/bash", temp_file.name] + self.config("shell_args"), env=env)
             os.unlink(temp_file.name)
 
 
