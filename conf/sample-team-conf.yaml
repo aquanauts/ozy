@@ -50,3 +50,15 @@ apps:
     template: hashicorp
     app_name: terraform
     version: 0.12.13
+  vagrant:
+    template: hashicorp
+    app_name: vagrant
+    version: 2.2.6
+  packer:
+    template: hashicorp
+    app_name: packer
+    version: 1.4.4
+  consul:
+    template: hashicorp
+    app_name: consul
+    version: 1.6.1
