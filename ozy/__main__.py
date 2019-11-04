@@ -41,7 +41,7 @@ def init(url):
     user_conf['url'] = url
     save_ozy_user_conf(user_conf)
 
-    if check_path(ozy_bin_dir):
+    if not check_path(ozy_bin_dir):
         _LOGGER.info("ozy is installed, but needs a little more setup work:")
         show_path_warning(ozy_bin_dir)
     else:
@@ -85,6 +85,7 @@ def check_path(ozy_bin_dir):
     real_paths = set(os.path.realpath(path) for path in os.getenv("PATH").split(":"))
     if os.path.realpath(ozy_bin_dir) in real_paths:
         return True
+    return False
 
 
 @main.command()
