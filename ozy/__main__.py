@@ -52,11 +52,14 @@ def symlink_binaries(ozy_bin_dir, config):
     global PATH_TO_ME, IS_SINGLE_FILE
     if IS_SINGLE_FILE:
         dest_filename = os.path.join(ozy_bin_dir, 'ozy')
-        _LOGGER.debug("Copying single-file ozy distribution")
-        if os.path.exists(dest_filename):
-            os.unlink(dest_filename)
-        shutil.copyfile(PATH_TO_ME, dest_filename)
-        shutil.copymode(PATH_TO_ME, dest_filename)
+        if os.path.samefile(PATH_TO_ME, dest_filename):
+            _LOGGER.debug("Not copying anything as we're already in the right place")
+        else:
+            _LOGGER.debug("Copying single-file ozy distribution")
+            if os.path.exists(dest_filename):
+                os.unlink(dest_filename)
+            shutil.copyfile(PATH_TO_ME, dest_filename)
+            shutil.copymode(PATH_TO_ME, dest_filename)
     else:
         _LOGGER.debug("Symlinking dev ozy")
         softlink(from_command=PATH_TO_ME, to_command='ozy', ozy_bin_dir=ozy_bin_dir)
