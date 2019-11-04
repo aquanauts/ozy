@@ -1,7 +1,5 @@
 SHELL := $(shell which bash) # Use bash instead of bin/sh as shell
 SYS_PYTHON := $(shell which python3.7 || echo ".python_is_missing")
-DOCKER := $(shell which docker || echo ".docker_is_missing")
-NOMAD := $(shell which nomad || echo ".nomad_is_missing")
 VENV = .venv
 PIP := $(VENV)/bin/pip
 DEPS := $(VENV)/.deps
@@ -42,8 +40,6 @@ $(TEST_TYPES): % : $(DEPS)
 .PHONY: package-pip
 package-pip: test
 	$(PYTHON) setup.py sdist
-
-
 
 .PHONY: publish-pip
 publish-pip: clean package ## build and publish the package to artifactory

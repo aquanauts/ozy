@@ -7,7 +7,8 @@ if getattr(sys, 'frozen', False):
     # Running under pyinstaller
     from ozy.__main__ import app_main
 
-    app_main(sys.argv[0], sys.argv[1:], True)
+    # https://pyinstaller.readthedocs.io/en/stable/runtime-information.html#using-sys-executable-and-sys-argv-0
+    app_main(sys.executable, sys.argv[1:], True)
 else:
     # Running in dev mode
     OZY_DIR = os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
