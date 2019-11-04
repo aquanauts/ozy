@@ -64,6 +64,10 @@ apps:
     version: 1.6.1
   upx:
     version: '3.95'
-    type: tarball_installer
+    type: tarball
     url: https://github.com/upx/upx/releases/download/v{version}/upx-{version}-amd64_linux.tar.xz
     executable_path: upx-{version}-amd64_linux/upx
+  docker-compose:
+    version: 1.24.1
+    type: single_file
+    url: https://github.com/docker/compose/releases/download/{version}/docker-compose-Linux-x86_64

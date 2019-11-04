@@ -44,23 +44,38 @@ def ensure_keys(name, config, *keys):
 
 
 class Installer:
+    def __init__(self, name, config, *required_keys, **default_keys):
+        self._name = name
+        self._config = default_keys.copy()
+        for required_key in required_keys:
+            if required_key not in config:
+                raise OzyException(f"Missing required key '{required_key}' in '{name}'")
+            self._config[required_key] = config[required_key]
+        for optional_key in default_keys.keys():
+            if optional_key in config:
+                self._config[optional_key] = config[optional_key]
+
+    def config(self, name):
+        return self._config[name]
+
     def install(self, to_dir):
         raise RuntimeError("Must be overridden")
 
 
+# TODO support sha256, sha256_signature and sha256_gpg_key
+# TODO tests for installers!
 class SingleBinaryZipInstaller(Installer):
-    def __init__(self, description, config):
-        self._config = config
-        ensure_keys(description, self._config, 'app_name', 'url')
+    def __init__(self, name, config):
+        super().__init__(name, config, 'url', app_name=name)
 
     def __str__(self):
-        return f'zip installer from {self._config["url"]}'
+        return f'zip installer from {self.config("url")}'
 
     def install(self, to_dir):
+        app_name = self.config('app_name')
+        url = self.config('url')
         os.makedirs(to_dir)
-        url = self._config['url']
-        app_path = os.path.join(to_dir, self._config['app_name'])
-        # TODO support sha256, sha256_signature and sha256_gpg_key
+        app_path = os.path.join(to_dir, app_name)
         with NamedTemporaryFile() as temp_file:
             download_to_file_obj(temp_file, url)
             temp_file.flush()
@@ -75,17 +90,15 @@ class SingleBinaryZipInstaller(Installer):
 
 
 class TarballInstaller(Installer):
-    def __init__(self, description, config):
-        self._config = config
-        ensure_keys(description, self._config, 'url')
+    def __init__(self, name, config):
+        super().__init__(name, config, 'url')
 
     def __str__(self):
-        return f'tar installer from {self._config["url"]}'
+        return f'tar installer from {self.config("url")}'
 
     def install(self, to_dir):
         os.makedirs(to_dir)
-        url = self._config['url']
-        # TODO support sha256, sha256_signature and sha256_gpg_key
+        url = self.config('url')
         with NamedTemporaryFile() as temp_file:
             download_to_file_obj(temp_file, url)
             temp_file.flush()
@@ -93,9 +106,26 @@ class TarballInstaller(Installer):
             tf.extractall(to_dir)
 
 
+class SingleFileInstaller(Installer):
+    def __init__(self, name, config):
+        super().__init__(name, config, 'url', app_name=name)
+
+    def __str__(self):
+        return f'file installer from {self.config("url")}'
+
+    def install(self, to_dir):
+        os.makedirs(to_dir)
+        url = self.config('url')
+        app_path = os.path.join(to_dir, self.config('app_name'))
+        with open(app_path, 'wb') as output_file:
+            download_to_file_obj(output_file, url)
+        os.chmod(app_path, 0o774)
+
+
 SUPPORTED_INSTALLERS = dict(
     single_binary_zip=SingleBinaryZipInstaller,
-    tarball_installer=TarballInstaller
+    tarball=TarballInstaller,
+    single_file=SingleFileInstaller
 )
 
 
@@ -109,7 +139,7 @@ class App:
         install_type = self._config['type']
         if install_type not in SUPPORTED_INSTALLERS:
             raise OzyException(f"Unsupported installation type '{install_type}'")
-        self._installer = SUPPORTED_INSTALLERS[install_type](f'{name} installer {install_type}', self._config)
+        self._installer = SUPPORTED_INSTALLERS[install_type](name, self._config)
 
     def __str__(self):
         return f'{self.name} {self._config["version"]} ({self._installer})'
