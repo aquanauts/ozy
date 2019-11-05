@@ -6,7 +6,7 @@ import sys
 import click
 import coloredlogs
 
-from ozy import OzyException, find_tool, install_if_needed_and_get_path_to_tool_and_rename_me, download_to, \
+from ozy import OzyError, find_app, download_to, \
     get_ozy_dir, ensure_ozy_dirs, get_ozy_bin_dir, parse_ozy_conf, softlink, save_ozy_user_conf, load_ozy_user_conf, \
     load_config, App
 
@@ -95,7 +95,7 @@ def update(url=None):
     user_conf = load_ozy_user_conf()
     if not url:
         if 'url' not in user_conf:
-            raise OzyException('Missing url in configuration')
+            raise OzyError('Missing url in configuration')
         url = user_conf['url']
     ozy_conf_filename = f"{get_ozy_dir()}/ozy.yaml"
     download_to(ozy_conf_filename, url)
@@ -142,6 +142,27 @@ def sync():
     symlink_binaries(get_ozy_bin_dir(), load_config())
 
 
+@main.command()
+@click.option("--version", metavar="VERSION", type=str)
+@click.argument("app", metavar="APP", type=str)
+@click.argument("arguments", metavar="ARG", nargs=-1, type=str)
+def run(app, arguments, version):
+    """Runs the given application."""
+    _run(app, arguments, version)
+
+
+def _run(app, arguments, version=None):
+    tool = find_app(app, version)
+    if not tool:
+        raise OzyError(f"Unable to find ozy-controlled app '{app}'")
+    tool.ensure_installed()
+    try:
+        os.execv(tool.executable, [tool.executable] + list(arguments))
+    except Exception as e:
+        _LOGGER.error("Unable to execute %s: %s", tool.executable, e)
+        raise
+
+
 def app_main(path_to_ozy, argv0, arguments, is_single_file):
     global PATH_TO_ME, IS_SINGLE_FILE
     PATH_TO_ME = os.path.realpath(path_to_ozy)
@@ -152,16 +173,13 @@ def app_main(path_to_ozy, argv0, arguments, is_single_file):
         main(prog_name='ozy', args=arguments)
     else:
         coloredlogs.install(fmt='%(message)s', level='INFO')
-        tool = find_tool(invoked_as)
-        if not tool:
-            raise OzyException(f"TODO better, couldn't find {invoked_as}")
-        path = install_if_needed_and_get_path_to_tool_and_rename_me(tool)
-        try:
-            os.execv(path, [path] + arguments)
-        except Exception as e:
-            _LOGGER.error("Unable to execute %s: %s", path, e)
-            raise
+        _run(invoked_as, arguments)
 
 
 if __name__ == "__main__":
-    app_main(sys.argv[1], sys.argv[1], sys.argv[2:], False)
+    try:
+        app_main(sys.argv[1], sys.argv[1], sys.argv[2:], False)
+    except OzyError as ozy_error:
+        _LOGGER.error(ozy_error)
+        _LOGGER.debug(ozy_error, exc_info=True)
+        sys.exit(1)

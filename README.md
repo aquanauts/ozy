@@ -80,10 +80,24 @@ Nomad v0.10.0 (25ee121d951939504376c70bf8d7950c1ddb6a82)
 Directories are walked up from the current directory, looking for `~/.ozy.yaml` files. Settings are applied from the combination of all configuration files found, with the most deeply-nested yaml file settings taking precedence. 
 
 ## Running a command through ozy
-TODO: this
+You can directly run a command through ozy:
+
 ```bash
-$ ozy run nomad 0.9.4 
+$ ozy run nomad -- --help
+Usage: nomad [-version] [-help] [-autocomplete-(un)install] <command> [args]
+
+Common commands:
+...
 ```
+
+You can also specify a specific version:
+```bash
+$ ozy run nomad --version 0.9.1 -- --version
+Installing nomad 0.9.1
+100%|█████████████| 25.4M/25.4M [00:00<00:00, 73.7MiB/s]
+Nomad v0.9.1 (4b2bdbd9ab68a27b10c2ee781cceaaf62e114399)
+```
+
 
 ## Removing a command
 TODO: this

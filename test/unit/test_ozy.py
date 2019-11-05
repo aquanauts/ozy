@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from ozy import safe_expand, OzyException, get_ozy_dir, walk_up_dirs
+from ozy import safe_expand, OzyError, get_ozy_dir, walk_up_dirs
 
 
 def test_safe_expand():
@@ -22,7 +22,7 @@ def test_safe_expand():
 
 
 def test_bad_safe_expand():
-    with pytest.raises(OzyException):
+    with pytest.raises(OzyError):
         safe_expand(dict(foo="bar"), "I am templated {baz}")
 
 
@@ -31,7 +31,7 @@ def test_ozy_dirs():
     assert ozy_dir is not None
     home = os.environ['HOME']
     del os.environ['HOME']
-    with pytest.raises(OzyException):
+    with pytest.raises(OzyError):
         get_ozy_dir()
     os.environ['HOME'] = home
 

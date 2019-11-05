@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 DOWNLOAD_CHUNK_SIZE = 128 * 1024
 
 
-class OzyException(Exception):
+class OzyError(Exception):
     pass
 
 
@@ -29,14 +29,14 @@ def safe_expand(format_params, to_expand):
     try:
         return to_expand.format(**format_params)
     except KeyError as ke:
-        raise OzyException(f"Could not find key {ke} in expansion '{to_expand}' with params '{format_params}'")
+        raise OzyError(f"Could not find key {ke} in expansion '{to_expand}' with params '{format_params}'")
 
 
 def resolve(config, templates):
     if 'template' in config:
         template_name = config['template']
         if template_name not in templates:
-            raise OzyException(f"Unable to find template '{template_name}'")
+            raise OzyError(f"Unable to find template '{template_name}'")
         config = ChainMap(config,
                           templates[template_name])  # TODO had these the wrong way round to start with. make a test
     return {key: safe_expand(config, value) for key, value in config.items()}
@@ -45,7 +45,7 @@ def resolve(config, templates):
 def ensure_keys(name, config, *keys):
     for required_key in keys:
         if required_key not in config:
-            raise OzyException(f"Missing required key '{required_key}' in '{name}'")
+            raise OzyError(f"Missing required key '{required_key}' in '{name}'")
 
 
 class Installer:
@@ -54,7 +54,7 @@ class Installer:
         self._config = default_keys.copy()
         for required_key in required_keys:
             if required_key not in config:
-                raise OzyException(f"Missing required key '{required_key}' in '{name}'")
+                raise OzyError(f"Missing required key '{required_key}' in '{name}'")
             self._config[required_key] = config[required_key]
         for optional_key in default_keys.keys():
             if optional_key in config:
@@ -87,7 +87,7 @@ class SingleBinaryZipInstaller(Installer):
             zf = ZipFile(temp_file.name)
             contents = zf.namelist()
             if len(contents) != 1:
-                raise OzyException(f"More than one file in the zipfile at {url}! ({contents})")
+                raise OzyError(f"More than one file in the zipfile at {url}! ({contents})")
             with open(app_path, 'wb') as out_file:
                 with zf.open(contents[0]) as in_file:
                     out_file.write(in_file.read())
@@ -184,7 +184,7 @@ class App:
         ensure_keys(name, self._config, 'version', 'type')
         install_type = self._config['type']
         if install_type not in SUPPORTED_INSTALLERS:
-            raise OzyException(f"Unsupported installation type '{install_type}'")
+            raise OzyError(f"Unsupported installation type '{install_type}'")
         self._installer = SUPPORTED_INSTALLERS[install_type](name, self._config)
 
     def __str__(self):
@@ -242,11 +242,6 @@ class App:
             self.install()
 
 
-def install_if_needed_and_get_path_to_tool_and_rename_me(app):
-    app.ensure_installed()
-    return app.executable
-
-
 def walk_up_dirs(path):
     path = os.path.realpath(path)
     previous_path = None
@@ -267,7 +262,7 @@ def apply_overrides(source, destination):
     return destination
 
 
-def load_config():
+def load_config(overrides=None):
     # Annoyingly can't just use a chainmap here as nested maps don't work the way we'd like
     config = parse_ozy_conf(f"{get_ozy_dir()}/ozy.yaml")
     ozy_files = []
@@ -277,12 +272,17 @@ def load_config():
             ozy_files.append(conf_file)
     for path in reversed(ozy_files):
         apply_overrides(parse_ozy_conf(path), config)
+    if overrides:
+        apply_overrides(overrides, config)
     _LOGGER.debug(config)
     return config
 
 
-def find_tool(tool):
-    config = load_config()
+def find_app(tool, version=None):
+    overrides = None
+    if version:
+        overrides = {'apps': {tool: {'version': version}}}
+    config = load_config(overrides)
     if tool in config['apps']:
         return App(tool, config)
     else:
@@ -304,7 +304,7 @@ def download_to(dest_file_name: str, url: str):
 def download_to_file_obj(dest_file_obj: BinaryIO, url: str):
     response = requests.get(url, stream=True)
     if not response.ok:
-        raise OzyException(f"Unable to fetch url '{url}' - {response}")
+        raise OzyError(f"Unable to fetch url '{url}' - {response}")
     total_size = int(response.headers.get('content-length', 0))
     with tqdm(total=total_size, unit='iB', unit_scale=True) as t:
         for data in response.iter_content(DOWNLOAD_CHUNK_SIZE):
@@ -319,7 +319,7 @@ def ensure_ozy_dirs():
 def get_home_dir() -> str:
     if 'HOME' in os.environ:
         return os.environ['HOME']
-    raise OzyException("HOME env variable not found")
+    raise OzyError("HOME env variable not found")
 
 
 def get_ozy_dir() -> str:
