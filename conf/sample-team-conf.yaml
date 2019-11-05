@@ -98,3 +98,9 @@ apps:
     version: '1415'
     package: aq-yard
     executable_path: bin/yard
+  anaconda-project:
+    version: 0.8.3
+    relocatable: false
+    type: conda
+    package: anaconda-project
+    executable_path: bin/anaconda-project
