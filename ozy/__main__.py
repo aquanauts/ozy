@@ -89,21 +89,46 @@ def check_path(ozy_bin_dir):
 
 
 @main.command()
-@click.option("--url", metavar="URL", type=str)
-def update(url=None):
-    """Update configuration from the remote URL."""
+@click.option("--url", metavar="URL", type=str, help="configuration URL (default will use previously set)")
+@click.option("--dry-run/--no-dry-run", help="make no changes, just show what would happen", default=False)
+def update(dry_run, url):
+    """Update base configuration from the remote URL."""
     user_conf = load_ozy_user_conf()
     if not url:
         if 'url' not in user_conf:
             raise OzyError('Missing url in configuration')
         url = user_conf['url']
     ozy_conf_filename = f"{get_ozy_dir()}/ozy.yaml"
-    download_to(ozy_conf_filename, url)
-    ozy_bin_dir = get_ozy_bin_dir()
-    user_conf['url'] = url
-    save_ozy_user_conf(user_conf)
-    root_conf = parse_ozy_conf(ozy_conf_filename)  ## TODO think how this interacts with local config files
-    symlink_binaries(ozy_bin_dir, root_conf)
+    tmp_filename = ozy_conf_filename + ".tmp"
+    download_to(tmp_filename, url)
+    new_conf_root = parse_ozy_conf(tmp_filename)
+    old_conf_root = parse_ozy_conf(ozy_conf_filename)
+
+    changed = False
+    for app, new_conf in new_conf_root['apps'].items():
+        old_conf = old_conf_root['apps'][app]
+        if not old_conf:
+            _LOGGER.info('%s new app %s (%s)', "Would install" if dry_run else "Installing", app, new_conf['version'])
+            changed = True
+        elif old_conf['version'] != new_conf['version']:
+            _LOGGER.info('%s %s from %s to %s', "Would upgrade" if dry_run else "Upgrading", app, old_conf['version'],
+                         new_conf['version'])
+            changed = True
+
+    if not dry_run:
+        ozy_bin_dir = get_ozy_bin_dir()
+        user_conf['url'] = url
+        save_ozy_user_conf(user_conf)
+        os.rename(tmp_filename, ozy_conf_filename)
+        symlink_binaries(ozy_bin_dir, new_conf_root)
+        if not changed:
+            _LOGGER.info("No changes made")
+    else:
+        if changed:
+            _LOGGER.info("Dry run only - no changes made")
+        else:
+            _LOGGER.info("Dry run only - no changes would be made, even without --dry-run")
+        os.unlink(tmp_filename)
 
 
 @main.command()

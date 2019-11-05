@@ -32,20 +32,20 @@ Team config name: Aquatic Team Configuration
 
 ## Updating
 Assuming the config on the remote url has changed to a new version of nomad:
-TODO: this isn't the output currently
 ```bash
 $ ozy update
-team version of nomad changed from 0.9.4 to 0.9.5
-team version of vault changed from 1.2.3 to 1.2.5
-run the app to download and install 
+100%|████████████████| 3.86k/3.86k [00:00<00:00, 17.3MiB/s]
+Upgrading nomad from 0.9.3 to 0.9.4
+Upgrading vault from 1.2.2 to 1.2.3
 ```
 
 This will cause ozy to re-fetch your team's ozy config url, and note the updates. 
-TODO: dry-run not supported yet
 ```bash
-$ ozy update --dry-run 
-team version of nomad would change from 0.9.4 to 0.9.5
-team version of vault would change from 1.2.3 to 1.2.5
+$ ozy update --dry-run
+100%|████████████████| 3.86k/3.86k [00:00<00:00, 17.3MiB/s]
+Would upgrade nomad from 0.9.3 to 0.9.4
+Would upgrade vault from 1.2.2 to 1.2.3
+Dry run only - no changes made
 ```
 
 ## Eagerly installing all versions
