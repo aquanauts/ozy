@@ -106,7 +106,7 @@ def update(dry_run, url):
 
     changed = False
     for app, new_conf in new_conf_root['apps'].items():
-        old_conf = old_conf_root['apps'][app]
+        old_conf = old_conf_root['apps'].get(app, None)
         if not old_conf:
             _LOGGER.info('%s new app %s (%s)', "Would install" if dry_run else "Installing", app, new_conf['version'])
             changed = True
