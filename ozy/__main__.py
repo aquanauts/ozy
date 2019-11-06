@@ -136,7 +136,8 @@ def info():
     """Print information about the installation and configuration."""
     _LOGGER.info("ozy v0.0.0")  # TODO version
     ozy_bin_dir = get_ozy_bin_dir()
-    if not check_path(ozy_bin_dir):
+    path_ok = check_path(ozy_bin_dir)
+    if not path_ok:
         show_path_warning(ozy_bin_dir)
     user_config = load_ozy_user_conf()
     _LOGGER.info("Team URL: %s", user_config.get("url", "(unset)"))
@@ -145,6 +146,14 @@ def info():
     for app_name in config['apps']:
         app = App(app_name, config)
         _LOGGER.info("  %s: %s", app_name, app)
+        if path_ok:
+            found_app = shutil.which(app_name)
+            if not found_app:
+                _LOGGER.warning("  %s not found on path: perhaps an 'ozy sync' is needed?", app_name)
+            else:
+                if os.path.realpath(found_app) != os.path.realpath(os.path.join(ozy_bin_dir, app_name)):
+                    _LOGGER.warning("  %s is not under ozy control! It was found on your PATH earlier than ozy at %s",
+                                    app_name, found_app)
 
 
 @main.command()
