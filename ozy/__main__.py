@@ -176,6 +176,56 @@ def sync():
     symlink_binaries(get_ozy_bin_dir(), load_config())
 
 
+def _makefile_error(error):
+    print(f'$(error "{error}")')  # todo escape
+    sys.exit(1)
+
+
+@main.command()
+@click.option("--all-apps/--no-all-apps", help="include all APPs", default=False)
+@click.argument("makefile_var", metavar="VAR", type=str)
+@click.argument("required_apps", metavar="APP", nargs=-1, type=str)
+def makefile_config(makefile_var, required_apps, all_apps):
+    """
+    Checks apps, and prints a single-line Makefile variable.
+
+    Use as an argument to $(eval). Errors will are output as $(error) directives
+    to report in make.
+    The given variable is defined to be the ozy binary directory, so any app will be
+    $(VAR)/app_name. If undefined, you know ozy isn't installed.
+
+    Example:
+    $ cat Makefile
+    $(eval $(shell ozy makefile-config OZY_BIN_DIR terraform))
+    ifndef OZY_BIN_DIR
+    $(error please install ozy)
+    endif
+
+    install:
+        $(OZY_BIN_DIR)/terraform apply
+    """
+    config = load_config()
+    ozy_bin_dir = get_ozy_bin_dir()
+    path_ok = check_path(ozy_bin_dir)
+    if not path_ok:
+        _makefile_error("ozy is not on the path")
+    if all_apps:
+        required_apps = config['apps'].keys()
+    if not required_apps:
+        _makefile_error("no ozy apps found to configure")
+    for app_name in required_apps:
+        if app_name not in config['apps']:
+            _makefile_error(f"Missing ozy app '{app_name}'")
+        app = App(app_name, config)
+        app.ensure_installed()
+        found_app = shutil.which(app_name)
+        app_in_bin = os.path.join(ozy_bin_dir, app_name)
+        if os.path.realpath(found_app) != os.path.realpath(app_in_bin):
+            _makefile_error(f"{found_app} found in PATH earlier than ozy: "
+                            f"results could be inconsistent (found at {found_app})")
+    print(f"{makefile_var}:={ozy_bin_dir}")
+
+
 @main.command()
 @click.option("--version", metavar="VERSION", type=str)
 @click.argument("app", metavar="APP", type=str)
