@@ -2,7 +2,9 @@ import os
 
 import pytest
 
-from ozy import safe_expand, OzyError, get_ozy_dir, walk_up_dirs
+from ozy import OzyError
+from ozy.config import safe_expand
+from ozy.files import walk_up_dirs, get_ozy_dir
 
 
 def test_safe_expand():

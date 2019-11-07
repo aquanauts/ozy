@@ -6,9 +6,11 @@ import sys
 import click
 import coloredlogs
 
-from ozy import OzyError, find_app, download_to, \
-    get_ozy_dir, ensure_ozy_dirs, get_ozy_bin_dir, parse_ozy_conf, softlink, save_ozy_user_conf, load_ozy_user_conf, \
-    load_config, App
+from ozy import OzyError
+from ozy.app import App, find_app
+from ozy.config import load_ozy_user_conf, save_ozy_user_conf, parse_ozy_conf, load_config
+from ozy.files import ensure_ozy_dirs, get_ozy_bin_dir, softlink, get_ozy_dir
+from ozy.utils import download_to
 
 _LOGGER = logging.getLogger(__name__)
 
