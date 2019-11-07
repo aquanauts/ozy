@@ -7,6 +7,12 @@
 * One-line installs a la lake-client 
 * Supports installing `conda` packages
 
+## 0.0.1-pre (First test release)
+* Support makefile-config
+
+## 0.0.2
+* Bug fix in makefile-config
+
 ---
 
 TODO
