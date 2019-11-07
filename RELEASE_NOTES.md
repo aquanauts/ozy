@@ -14,6 +14,7 @@ TODO
 * Support `rm`
 * Support `clean`
 * Open source! 
+* "flock" for multiple ozy invocations at once?
 
 More Apps!
 * `docker`

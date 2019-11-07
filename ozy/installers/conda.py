@@ -22,5 +22,4 @@ class CondaInstaller(Installer):
         args = (['conda', 'create', '-y'] + channels
                 + ['-p', to_dir, f'{self.config("package")}={self.config("version")}'])
         _LOGGER.debug("Executing %s", " ".join(args))
-        check_call(
-            args)
+        check_call(args)

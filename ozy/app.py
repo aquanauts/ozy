@@ -10,6 +10,15 @@ from ozy.installers import SUPPORTED_INSTALLERS
 _LOGGER = logging.getLogger(__name__)
 
 
+def ensure_keys(name, config, *keys):
+    values = []
+    for required_key in keys:
+        if required_key not in config:
+            raise OzyError(f"Missing required key '{required_key}' in '{name}'")
+        values.append(config[required_key])
+    return values
+
+
 class App:
     def __init__(self, name, root_config):
         self._name = name
@@ -17,14 +26,13 @@ class App:
         self._config = resolve(root_config['apps'][name], self._root_config.get('templates', {}))
         self._executable_path = self._config.get('executable_path', self.name)
         self._relocatable = self._config.get('relocatable', True)
-        ensure_keys(name, self._config, 'version', 'type')
-        install_type = self._config['type']
+        self._version, install_type = ensure_keys(name, self._config, 'version', 'type')
         if install_type not in SUPPORTED_INSTALLERS:
             raise OzyError(f"Unsupported installation type '{install_type}'")
         self._installer = SUPPORTED_INSTALLERS[install_type](name, self._config)
 
     def __str__(self):
-        return f'{self.name} {self._config["version"]} ({self._installer})'
+        return f'{self.name} {self._version} ({self._installer})'
 
     @property
     def name(self) -> str:
@@ -36,7 +44,7 @@ class App:
 
     @property
     def version(self) -> str:
-        return self._config['version']
+        return self._version
 
     @property
     def install_path(self) -> str:
@@ -78,16 +86,10 @@ class App:
             self.install()
 
 
-def ensure_keys(name, config, *keys):
-    for required_key in keys:
-        if required_key not in config:
-            raise OzyError(f"Missing required key '{required_key}' in '{name}'")
-
-
 def find_app(tool, version=None):
     overrides = None
     if version:
-        overrides = {'apps': {tool: {'version': version}}}
+        overrides = dict(apps=dict(tool=dict(version=version)))
     config = load_config(overrides)
     if tool in config['apps']:
         return App(tool, config)
