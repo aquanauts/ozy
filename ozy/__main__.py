@@ -6,7 +6,7 @@ import sys
 import click
 import coloredlogs
 
-from ozy import OzyError
+from ozy import OzyError, __version__
 from ozy.app import App, find_app
 from ozy.config import load_ozy_user_conf, save_ozy_user_conf, parse_ozy_conf, load_config
 from ozy.files import ensure_ozy_dirs, get_ozy_bin_dir, softlink, get_ozy_dir
@@ -136,7 +136,7 @@ def update(dry_run, url):
 @main.command()
 def info():
     """Print information about the installation and configuration."""
-    _LOGGER.info("ozy v0.0.0")  # TODO version
+    _LOGGER.info(f"ozy v{__version__}")
     ozy_bin_dir = get_ozy_bin_dir()
     path_ok = check_path(ozy_bin_dir)
     if not path_ok:

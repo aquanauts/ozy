@@ -25,7 +25,7 @@ Nomad v0.9.4 (a81aa846a45fb8248551b12616287cb57c418cd6)
 ##  Getting info on supported commands
 ```bash
 $ ozy info
-ozy v0.0.0
+ozy v0.0.1
 Team URL: http://localhost:8000/sample-team-conf.yaml
 Team config name: Aquatic Team Configuration
   nomad: nomad 0.9.5 (zip installer from https://releases.hashicorp.com/nomad/0.9.5/nomad_0.9.5_linux_amd64.zip)
