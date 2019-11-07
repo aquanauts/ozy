@@ -13,7 +13,7 @@ else:
     # Running in dev mode
     OZY_DIR = os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 
-    OZY_PYTHON = os.path.join(OZY_DIR, '.venv', 'bin', 'python3.7')
+    OZY_PYTHON = os.path.join(OZY_DIR, '.venv', 'bin', 'python3')
     os.environ['PYTHONPATH'] = OZY_DIR
     # We pass argv[0] again to the python executable: if we don't use OZY_PYTHON as argv[0], virtualenv flips out.
     # As the ozy script needs to know the name it was invoked as, we pass all of argv again.
