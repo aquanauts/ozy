@@ -3,7 +3,10 @@
 `ozy` is a native Python program that makes it easy for you and your team to share and colloborate on commonly used programs such as Hashicorp's `vault`, `python`, etc. 
 
 ## Getting Started
-First, install ozy: follow the instructions on https://ozy.aq.tc/. This will cause `ozy` to be installed in `~/.ozy`. In this directory there are some `ozy.*.yaml` files, and a `bin` directory. As part of the installation `ozy` will check and tell you how to put `~/.ozy/bin` into your path. It will place magic symlinks there that let it masquerade as all the applications it can install.
+
+TODO: update with non-aquatic specific installer
+(was: "First, install ozy: follow the instructions on https://ozy.aq.tc/" )
+This will cause `ozy` to be installed in `~/.ozy`. In this directory there are some `ozy.*.yaml` files, and a `bin` directory. As part of the installation `ozy` will check and tell you how to put `~/.ozy/bin` into your path. It will place magic symlinks there that let it masquerade as all the applications it can install.
 
 To see what the installer is doing see [ozy init](#Initializing) - but in short it is configuring itself from an Aquatic-specific endpoint.
 
@@ -112,8 +115,3 @@ TODO: this
 $ ozy clean
 ```
 This will remove `~/.cache/ozy`! 
-
----
-
-### Matt's original write-up
-See [this Google doc](https://docs.google.com/document/d/1CkUMCaoJg0g5A60B5nxkKAGQ5Tfhm_WxrfUJEgBUjpU/edit#)

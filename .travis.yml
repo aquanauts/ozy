@@ -1,0 +1,7 @@
+language: python
+python:
+  - "3.8"
+install:
+  - make dep
+script:
+  - make test
