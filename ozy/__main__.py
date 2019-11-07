@@ -195,12 +195,15 @@ def makefile_config(makefile_var, required_apps, all_apps):
     $(VAR)/app_name. If undefined, you know ozy isn't installed.
 
     Example:
+
+    \b
     $ cat Makefile
     $(eval $(shell ozy makefile-config OZY_BIN_DIR terraform))
     ifndef OZY_BIN_DIR
     $(error please install ozy)
     endif
 
+    \b
     install:
         $(OZY_BIN_DIR)/terraform apply
     """
