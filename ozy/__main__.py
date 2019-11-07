@@ -222,7 +222,6 @@ def makefile_config(makefile_var, required_apps, all_apps):
         if app_name not in config['apps']:
             _makefile_error(f"Missing ozy app '{app_name}'")
         app = App(app_name, config)
-        app.ensure_installed()
         found_app = shutil.which(app_name)
         app_in_bin = os.path.join(ozy_bin_dir, app_name)
         if os.path.realpath(found_app) != os.path.realpath(app_in_bin):
