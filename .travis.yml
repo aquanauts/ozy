@@ -1,8 +1,17 @@
 language: python
 python:
-  - "3.7"
+  - '3.7'
 install:
   - make deps
 script:
   - make test
   - make dist
+deploy:
+  provider: releases
+  api_key:
+    secure: j9kvPZA8uEL3dgRqBWs+C50Y5HhvN1+43hsfvFoFwwPrQV2X/Y/Wr3zoJMmOPHSPGMkcH+T0CSDJAQu3V7ZY8ddq4+Cs7YN3fYMRfzi15A1UEKR1oXU6zX76XsCmw1eBl3PaTxGGWHa4T82ZJx2l2ER9TZ6de/5r4KREEQhJvuhB8Rh+rsEKgcElVg9cxAxINaymmYuiGrB3Ll/L5j8DgatMqqmQDTWK8ZKTeMNzuGDfPNnNjaUHnsmW8HOwQwO3Fyu8I5VJ9g+86USb0ASvPL+BuONX6YOVwKZONBNCwQsVeSYtPehvP75r3Se+VTSfjw/YpS4BfrKmmKsO1RptNDaLmT8O8D8sIP1mmieNS+vGpz1F1odF0tU5PqZftE/e+WgGS7s0b9TO3bjqeRF55IE/9pLYKDtHPoIZ12yi4zd5aWJig3S27Vyqu2bZhp2d014ZP1yKxKAKkvZqWpS8FGM9vZh9yxImCYRSBF8bv7iqV5GDOz1QS/YD6Ofj0Wplg7FoRusYrRttjhdv53+EocTlvuXSJmCt7CF0+1lbX/XvxmXx/y8IN4Ft6gDVl8zrLkKEYbjQdDHtcr/5yXHplPsqsEKqBpJ8M0Ur1RziD9aefMD9jTydcZRsKUduKkgE1wC+ELEsLzg772cU64NxJQnMxDy4vXA+Gt9PSRdep/0=
+  file: dist/ozy
+  skip_cleanup: true
+  on:
+    repo: aquanauts/ozy
+    tags: true
