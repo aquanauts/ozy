@@ -2,6 +2,7 @@ language: python
 python:
   - "3.8"
 install:
-  - make dep
+  - make deps
 script:
   - make test
+  - make dist
