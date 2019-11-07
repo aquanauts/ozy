@@ -1,5 +1,5 @@
 SHELL := $(shell which bash) # Use bash instead of bin/sh as shell
-SYS_PYTHON := $(shell which python3.7 || echo ".python_is_missing")
+SYS_PYTHON := $(shell which python3 || echo ".python_is_missing")
 ifndef VIRTUAL_ENV
 # We're not already in a virtual environment; so create one
 VENV := .venv
