@@ -1,6 +1,12 @@
 SHELL := $(shell which bash) # Use bash instead of bin/sh as shell
 SYS_PYTHON := $(shell which python3.7 || echo ".python_is_missing")
-VENV = .venv
+ifndef VIRTUAL_ENV
+# We're not already in a virtual environment; so create one
+VENV := .venv
+else
+# We're already in a virtual environment (e.g. travis). Use that instead
+VENV := $(VIRTUAL_ENV)
+endif
 PIP := $(VENV)/bin/pip
 DEPS := $(VENV)/.deps
 PYTHON := $(VENV)/bin/python3
