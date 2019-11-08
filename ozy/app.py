@@ -10,6 +10,7 @@ from ozy.installers import SUPPORTED_INSTALLERS
 _LOGGER = logging.getLogger(__name__)
 
 
+
 def ensure_keys(name, config, *keys):
     values = []
     for required_key in keys:

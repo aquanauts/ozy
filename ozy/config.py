@@ -10,11 +10,15 @@ from ozy.files import walk_up_dirs, get_ozy_dir
 _LOGGER = logging.getLogger(__name__)
 
 
-def load_config(overrides=None):
+def load_config(overrides=None, config=None, current_working_directory=None):
+    if config is None:
+        config = parse_ozy_conf(f"{get_ozy_dir()}/ozy.yaml")
+    if current_working_directory is None:
+        current_working_directory = os.getcwd()
+
     # Annoyingly can't just use a chainmap here as nested maps don't work the way we'd like
-    config = parse_ozy_conf(f"{get_ozy_dir()}/ozy.yaml")
     ozy_files = []
-    for path in walk_up_dirs(os.getcwd()):
+    for path in walk_up_dirs(current_working_directory):
         conf_file = os.path.join(path, '.ozy.yaml')
         if os.path.isfile(conf_file):
             ozy_files.append(conf_file)
@@ -38,6 +42,8 @@ def apply_overrides(source, destination):
 
 
 def resolve(config, templates):
+    if 'version' not in config:
+        raise OzyError(f"All app configs must provide a version key, was given {config} which did not")
     if 'template' in config:
         template_name = config['template']
         if template_name not in templates:
