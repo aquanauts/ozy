@@ -42,14 +42,13 @@ def apply_overrides(source, destination):
 
 
 def resolve(config, templates):
-    if 'version' not in config:
-        raise OzyError(f"All app configs must provide a version key, was given {config} which did not")
     if 'template' in config:
         template_name = config['template']
         if template_name not in templates:
             raise OzyError(f"Unable to find template '{template_name}'")
+        # TODO had these the wrong way round to start with. make a test
         config = ChainMap(config,
-                          templates[template_name])  # TODO had these the wrong way round to start with. make a test
+                          templates[template_name])
     return {key: safe_expand(config, value) for key, value in config.items()}
 
 

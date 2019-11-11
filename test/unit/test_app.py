@@ -8,7 +8,7 @@ from ozy.config import parse_ozy_conf, resolve
 def test_app():
     sample_config_file = "conf/sample-team-conf.yaml"
     ozy_conf = parse_ozy_conf(sample_config_file)
-    app = App("nomad", ozy_conf )
+    app = App("nomad", ozy_conf)
     assert app.name == "nomad"
     assert app.config['template'] == 'hashicorp'
     assert app.config['url']
@@ -17,12 +17,13 @@ def test_app():
     assert app.config['sha256']
     assert app.config['sha256_signature']
 
+
 def test_unsupported_installer():
     sample_config_file = "conf/sample-team-conf.yaml"
     ozy_conf = parse_ozy_conf(sample_config_file)
-    ozy_conf['templates']['hashicorp']['type'] = 'triple_binary_star' # not a supported installer
+    ozy_conf['templates']['hashicorp']['type'] = 'triple_binary_star'  # not a supported installer
     with pytest.raises(OzyError):
-        App("nomad", ozy_conf )
+        App("nomad", ozy_conf)
 
 
 def test_ensure_keys():
@@ -35,5 +36,3 @@ def test_ensure_keys():
     assert config
     with pytest.raises(OzyError):
         ensure_keys('nomad', config, 'type')
-
-
