@@ -77,7 +77,7 @@ def show_path_warning(ozy_bin_dir):
     _LOGGER.info("  bash$ echo -e '# ozy support\\nexport PATH=%s:$PATH' >> ~/.bashrc", ozy_bin_dir)
     _LOGGER.info("  then restart your shell sessions")
     _LOGGER.info("zsh shell users:")
-    _LOGGER.info("  zsh$ # some kind of wizardry here TODO!")
+    _LOGGER.info(f"  zsh$ # path+=({ozy_bin_dir})\\nexport PATH")
     _LOGGER.info("fish shell users: ")
     _LOGGER.info("  fish$ set --universal fish_user_paths %s $fish_user_paths", ozy_bin_dir)
     _LOGGER.warning("-" * 80)
