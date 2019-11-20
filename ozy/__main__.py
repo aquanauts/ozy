@@ -10,7 +10,7 @@ from ozy import OzyError, __version__
 from ozy.app import App, find_app
 from ozy.config import load_ozy_user_conf, save_ozy_user_conf, parse_ozy_conf, load_config
 from ozy.files import ensure_ozy_dirs, get_ozy_bin_dir, softlink, get_ozy_dir
-from ozy.utils import download_to
+from ozy.utils import download_to, restore_overridden_env_vars
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -245,7 +245,9 @@ def _run(app, arguments, version=None):
         raise OzyError(f"Unable to find ozy-controlled app '{app}'")
     tool.ensure_installed()
     try:
-        os.execv(tool.executable, [tool.executable] + list(arguments))
+        # The child process shouldn't get any of our overridden variables; put the original ones back.
+        environment = restore_overridden_env_vars(os.environ)
+        os.execve(tool.executable, [tool.executable] + list(arguments), environment)
     except Exception as e:
         _LOGGER.error("Unable to execute %s: %s", tool.executable, e)
         raise
