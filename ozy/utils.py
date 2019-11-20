@@ -32,3 +32,15 @@ def download_to(dest_file_name: str, url: str):
     except Exception:
         os.unlink(dest_file_temp)
         raise
+
+
+def restore_overridden_env_vars(environment):
+    environment = environment.copy()
+    for possibly_overridden in ['PYTHONPATH', 'LD_LIBRARY_PATH']:
+        orig = possibly_overridden + '_ORIG'
+        if orig in environment:
+            environment[possibly_overridden] = environment[orig]
+            del environment[orig]
+        elif possibly_overridden in environment:
+            del environment[possibly_overridden]
+    return environment
