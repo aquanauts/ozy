@@ -1,5 +1,7 @@
 import os
+
 import pytest
+
 from ozy import OzyError
 from ozy.files import walk_up_dirs, get_ozy_dir
 
@@ -22,9 +24,3 @@ def test_walk_up_dirs():
                os.path.join(os.path.sep, 'one'),
                os.path.sep
            ] == [x for x in walk_up_dirs(test_path)]
-
-
-
-
-
-
