@@ -8,14 +8,21 @@ if getattr(sys, 'frozen', False):
     from ozy.__main__ import app_main
 
     # https://pyinstaller.readthedocs.io/en/stable/runtime-information.html#using-sys-executable-and-sys-argv-0
+    # pyinstaller may override LD_LIBRARY_PATH, but if it does so, it saves it in LD_LIBRARY_PATH_ORIG
     app_main(sys.executable, sys.argv[0], sys.argv[1:], True)
 else:
     # Running in dev mode
     OZY_DIR = os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 
     OZY_PYTHON = os.path.join(OZY_DIR, '.venv', 'bin', 'python3')
-    os.environ['PYTHONPATH'] = OZY_DIR
+    environment = os.environ.copy()
+    # To ensure we work like pyinstaller, we preserve the "original" LD_LIBRARY_PATH here even though we don't modify
+    # it. We _do_ modify PYTHONPATH so we save that here.
+    for possibly_overridden in ('PYTHONPATH', 'LD_LIBRARY_PATH'):
+        if possibly_overridden in environment:
+            environment[possibly_overridden + '_ORIG'] = environment[possibly_overridden]
+    environment['PYTHONPATH'] = OZY_DIR
     # We pass argv[0] again to the python executable: if we don't use OZY_PYTHON as argv[0], virtualenv flips out.
     # As the ozy script needs to know the name it was invoked as, we pass all of argv again.
     # i.e. if invoked as "nomad --version" we will "path/to/python path/to/ozy/__main__.py nomad --version
-    os.execve(OZY_PYTHON, [OZY_PYTHON, os.path.join(OZY_DIR, 'ozy', '__main__.py')] + sys.argv, os.environ)
+    os.execve(OZY_PYTHON, [OZY_PYTHON, os.path.join(OZY_DIR, 'ozy', '__main__.py')] + sys.argv, environment)

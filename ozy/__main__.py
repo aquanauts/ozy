@@ -245,7 +245,16 @@ def _run(app, arguments, version=None):
         raise OzyError(f"Unable to find ozy-controlled app '{app}'")
     tool.ensure_installed()
     try:
-        os.execv(tool.executable, [tool.executable] + list(arguments))
+        # The child process shouldn't get any of our overridden variables; put the original ones back.
+        environment = os.environ.copy()
+        for possibly_overridden in ['PYTHONPATH', 'LD_LIBRARY_PATH']:
+            orig = possibly_overridden + '_ORIG'
+            if orig in environment:
+                environment[possibly_overridden] = environment[orig]
+                del environment[orig]
+            elif possibly_overridden in environment:
+                del environment[possibly_overridden]
+        os.execve(tool.executable, [tool.executable] + list(arguments), environment)
     except Exception as e:
         _LOGGER.error("Unable to execute %s: %s", tool.executable, e)
         raise
