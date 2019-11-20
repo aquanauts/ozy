@@ -1,5 +1,16 @@
 # ozy release notes
 
+## 0.0.3
+* Fix for `ozy` running python programs: `PYTHONPATH` and `LD_LIBRARY_PATH` were left hijacked by
+  `ozy`'s package system (pyinstaller).
+
+## 0.0.2
+* Bug fix in makefile-config
+
+
+## 0.0.1-pre (First test release)
+* Support makefile-config
+
 ## 0.0.0 (Work in progress) 
 * Init, info, update implemented
 * Apps! Support for `nomad`, `terraform`, and `vault` (general support for any Hashicorp thing)
@@ -7,11 +18,6 @@
 * One-line installs a la lake-client 
 * Supports installing `conda` packages
 
-## 0.0.1-pre (First test release)
-* Support makefile-config
-
-## 0.0.2
-* Bug fix in makefile-config
 
 ---
 
