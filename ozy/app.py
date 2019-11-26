@@ -7,6 +7,8 @@ from ozy.config import resolve, load_config
 from ozy.files import get_ozy_cache_dir
 from ozy.installers import SUPPORTED_INSTALLERS
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def ensure_keys(name, config, *keys):
     values = []
