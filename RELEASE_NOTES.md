@@ -1,5 +1,8 @@
 # ozy release notes
 
+## 0.0.4
+* Fix logging crash on `ozy install-all`
+
 ## 0.0.3
 * Fix for `ozy` running python programs: `PYTHONPATH` and `LD_LIBRARY_PATH` were left hijacked by
   `ozy`'s package system (pyinstaller).
