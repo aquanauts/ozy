@@ -93,3 +93,9 @@ apps:
     type: conda
     package: anaconda-project
     executable_path: bin/anaconda-project
+  conan:
+    version: 1.20.4
+    relocatable: false
+    type: pip
+    package: conan
+    executable_path: bin/conan

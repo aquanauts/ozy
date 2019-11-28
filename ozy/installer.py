@@ -2,7 +2,7 @@ from ozy import OzyError
 
 
 class Installer:
-    def __init__(self, name, config, *required_keys, **default_keys):
+    def __init__(self, name: str, config: dict, *required_keys, **default_keys):
         self._name = name
         self._config = default_keys.copy()
         for required_key in required_keys:
@@ -13,10 +13,10 @@ class Installer:
             if optional_key in config:
                 self._config[optional_key] = config[optional_key]
 
-    def config(self, name):
+    def config(self, name) -> object:
         return self._config[name]
 
-    def install(self, to_dir):
+    def install(self, to_dir: str):
         raise RuntimeError("Must be overridden")
 
 # TODO tests for installers!
