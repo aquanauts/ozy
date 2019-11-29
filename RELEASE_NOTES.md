@@ -1,5 +1,8 @@
 # ozy release notes
 
+## 0.0.5
+* Add support for `pip` installers (via `conda`).
+
 ## 0.0.4
 * Fix logging crash on `ozy install-all`
 

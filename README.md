@@ -127,3 +127,13 @@ This will remove `~/.cache/ozy`!
 ## Writing your own ozy.yaml
 
 TODO
+
+## Making a release
+
+To make a release of ozy:
+
+* Update the `__version__` in `ozy/__init__.py`
+* Ensure the `RELEASE_NOTES.md` are updated
+* Push the changes to GitHub
+* Make a release in GitHub with the same version, with a 'v' prepended
+* Travis will make the binaries automatically
