@@ -11,7 +11,8 @@ deploy:
   api_key:
     secure: tam81JXp6XLrlCvX8NEigjXePEKPx6SRPUOc5idT77M2UjjToXEsgoq9jksLKyVVRidhmcj9n3YsiSq7yu26kHMkZ4czWnfNl/5EZFYN0IpC/FJLkXdIInbWIo1BqJZ/l5/h57ZRxSREVD1yVW4DyuIeK7kg7mPvsDKFlT8u/RNXPQPNzqb2ljZg7+Don9lyWrOVfTI3qZ7dZCCoFIrLLL/Nrf6qQ/U4jYG1n4z4S8Z7rrE+kmVk/fiGsOkLKPbqfSUn8PoWJltTO8xOgxmFyM91lt3DNWpSJMTfB/9/DSHzSXcrHplr1Tw1Y7YXcdq3F3gZnmtOBQwxMFS87yNPhiMESO9oFh6C+rM/HhyUHIQdREpBAq7zF/Ib5zYTT0da4/dA8daevNCFMP/Bm82yTaGBVNRA7qgxM6g0kv2+VKWvlW+yZ7M9HMgcSGRRPp5216qYAfuUFMUm4ebJabfhD3jztN0vQ22D/o0vEL2HGAi60roUnmB4AyIb7XE3qIn4jE7AcCdYiUBEgQnKQ3Ejakg9DK7ZspKDZ3EozkfmvepDUUfeet49PT9f6ZVy5ZKNl7bM7pWdkRm7Q62CUx7e3ieY+ZELDS3ddoXhhWsaU85IZiRSFcAuvhj62PTEAAj2jEYBYoz8DSlHJUCGmTrj/CaSnprXzu6KAGVwZMvbQ8A=
   file: dist/ozy
-  cleanup: false
+  skip_cleanup: true
+  draft: true
   on:
     repo: aquanauts/ozy
     tags: true
