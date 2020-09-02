@@ -1,6 +1,7 @@
 import logging
 import os
 import shutil
+from subprocess import check_call
 
 from ozy import OzyError
 from ozy.config import resolve, load_config
@@ -26,6 +27,7 @@ class App:
         self._config = resolve(root_config['apps'][name], self._root_config.get('templates', {}))
         self._executable_path = self._config.get('executable_path', self.name)
         self._relocatable = self._config.get('relocatable', True)
+        self._post_install = self._config.get('post_install', [])
         self._version, install_type = ensure_keys(name, self._config, 'version', 'type')
         if install_type not in SUPPORTED_INSTALLERS:
             raise OzyError(f"Unsupported installation type '{install_type}'")
@@ -80,6 +82,9 @@ class App:
             except Exception:
                 shutil.rmtree(temp_install_dir)
                 raise
+        for install_step in self._post_install:
+            _LOGGER.info("Running post install step '%s'", " ".join(install_step))
+            check_call(install_step, cwd=self.install_path)
 
     def ensure_installed(self):
         if not self.is_installed():
