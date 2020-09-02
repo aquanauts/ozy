@@ -1,7 +1,9 @@
 import logging
 import os
 import shutil
+import shlex
 from subprocess import check_call
+from typing import Union, List
 
 from ozy import OzyError
 from ozy.config import resolve, load_config
@@ -20,6 +22,21 @@ def ensure_keys(name, config, *keys):
     return values
 
 
+def _fixup_one_command(command):
+    if isinstance(command, list):
+        return command
+    return shlex.split(command)
+
+
+def fixup_post_install(post_install: Union[list, str]) -> List[List[str]]:
+    if not post_install:
+        return []
+    if isinstance(post_install, str):
+        return [_fixup_one_command(post_install)]
+    post_install = [_fixup_one_command(x) for x in post_install]
+    return post_install
+
+
 class App:
     def __init__(self, name, root_config):
         self._name = name
@@ -27,7 +44,7 @@ class App:
         self._config = resolve(root_config['apps'][name], self._root_config.get('templates', {}))
         self._executable_path = self._config.get('executable_path', self.name)
         self._relocatable = self._config.get('relocatable', True)
-        self._post_install = self._config.get('post_install', [])
+        self._post_install = fixup_post_install(self._config.get('post_install', []))
         self._version, install_type = ensure_keys(name, self._config, 'version', 'type')
         if install_type not in SUPPORTED_INSTALLERS:
             raise OzyError(f"Unsupported installation type '{install_type}'")
