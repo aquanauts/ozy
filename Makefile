@@ -45,6 +45,6 @@ dist: deps  ## create distribution
 	$(PYINSTALLER) --onefile bin/ozy
 
 .PHONY: clean
-clean: ## remove venv and flush out pycache TODO (will fail on mac because --no-run-if-empty isn't bsd xargs)
+clean: ## remove venv and flush out pycache
 	rm -rf $(VENV) dist *.egg-info .mypy_cache $(dir $(CONDA_YAML))
 	find . -depth -name __pycache__ -type d -exec rm -fr {} \;
