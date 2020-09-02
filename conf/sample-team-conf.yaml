@@ -4,7 +4,7 @@ ozy_version: 0.0.2
 templates:
   hashicorp:
     type: single_binary_zip
-    url: https://releases.hashicorp.com/{app_name}/{version}/{app_name}_{version}_linux_amd64.zip
+    url: https://releases.hashicorp.com/{app_name}/{version}/{app_name}_{version}_{ozy_os}_{ozy_arch}.zip
     sha256: https://releases.hashicorp.com/{app_name}/{version}/{app_name}_{version}_SHA256SUMS
     sha256_signature: https://releases.hashicorp.com/{app_name}/{version}/{app_name}_{app_name}_SHA256SUMS.sig
     sha256_gpg_key: |
@@ -66,17 +66,17 @@ apps:
   upx:
     version: '3.95'
     type: tarball
-    url: https://github.com/upx/upx/releases/download/v{version}/upx-{version}-amd64_linux.tar.xz
-    executable_path: upx-{version}-amd64_linux/upx
+    url: https://github.com/upx/upx/releases/download/v{version}/upx-{version}-{ozy_arch}_{ozy_os}.tar.xz
+    executable_path: upx-{version}-{ozy_arch}_{ozy_os}/upx
   docker-compose:
     version: 1.24.1
     type: single_file
-    url: https://github.com/docker/compose/releases/download/{version}/docker-compose-Linux-x86_64
+    url: https://github.com/docker/compose/releases/download/{version}/docker-compose-Linux-{ozy_machine}
   conda:
     version: 4.7.12
     type: shell_install
     relocatable: false
-    url: https://repo.anaconda.com/miniconda/Miniconda3-{version}-Linux-x86_64.sh
+    url: https://repo.anaconda.com/miniconda/Miniconda3-{version}-Linux-{ozy_machine}.sh
     shell_args:
       - -u
       - -b
@@ -86,7 +86,7 @@ apps:
   fly:
     version: 5.6.0
     type: tarball
-    url: https://github.com/concourse/concourse/releases/download/v{version}/fly-{version}-linux-amd64.tgz
+    url: https://github.com/concourse/concourse/releases/download/v{version}/fly-{version}-{ozy_os}-{ozy_arch}.tgz
   anaconda-project:
     version: 0.8.3
     relocatable: false

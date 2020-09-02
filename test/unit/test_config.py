@@ -6,7 +6,7 @@ import pytest
 import yaml
 
 from ozy import OzyError
-from ozy.config import safe_expand, parse_ozy_conf, resolve, apply_overrides, get_user_conf_file, load_config
+from ozy.config import safe_expand, parse_ozy_conf, resolve, apply_overrides, get_user_conf_file, load_config, get_system_variables
 
 
 def test_parse_ozy_conf():
@@ -120,3 +120,13 @@ def test_load_config():
 def test_get_user_conf_file():
     ucf = get_user_conf_file()
     assert ucf
+
+
+def test_system_variables():
+    system_variables = get_system_variables()
+    assert 'ozy_os' in system_variables
+    assert 'ozy_machine' in system_variables
+    assert 'ozy_arch' in system_variables
+
+    expanded_config = safe_expand(dict(), "{ozy_os} {ozy_machine} {ozy_arch}")
+    assert expanded_config == f"{os.uname().sysname.lower()} {os.uname().machine} {'amd64' if os.uname().machine == 'x86_64' else os.uname().machine}"

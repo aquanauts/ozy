@@ -57,8 +57,11 @@ def safe_expand(format_params, to_expand):
         return [safe_expand(format_params, x) for x in to_expand]
     elif not isinstance(to_expand, str):
         return to_expand
+
+    params = get_system_variables()
+    params.update(format_params)
     try:
-        return to_expand.format(**format_params)
+        return to_expand.format(**params)
     except KeyError as ke:
         raise OzyError(f"Could not find key {ke} in expansion '{to_expand}' with params '{format_params}'")
 
@@ -86,3 +89,12 @@ def parse_ozy_conf(ozy_file_name):
     with open(ozy_file_name, "r") as ofnh:
         yaml_content = yaml.load(ofnh, Loader=yaml.UnsafeLoader)
         return yaml_content
+
+
+def get_system_variables():
+    uname = os.uname()
+    return {
+        'ozy_os': uname.sysname.lower(),
+        'ozy_machine': uname.machine,
+        'ozy_arch': 'amd64' if uname.machine == 'x86_64' else uname.machine
+    }
