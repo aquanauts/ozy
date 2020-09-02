@@ -47,4 +47,4 @@ dist: deps  ## create distribution
 .PHONY: clean
 clean: ## remove venv and flush out pycache TODO (will fail on mac because --no-run-if-empty isn't bsd xargs)
 	rm -rf $(VENV) dist *.egg-info .mypy_cache $(dir $(CONDA_YAML))
-	find . -name __pycache__ | xargs --no-run-if-empty rm -rf
+	find . -depth -name __pycache__ -type d -exec rm -fr {} \;
