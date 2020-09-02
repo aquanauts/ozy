@@ -83,6 +83,8 @@ apps:
       - -p
       - $INSTALL_DIR
     executable_path: bin/conda
+    post_install:
+      - ['bin/conda', 'config', '--set', 'auto_update_conda', 'False']
   fly:
     version: 5.6.0
     type: tarball

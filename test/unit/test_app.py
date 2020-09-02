@@ -1,7 +1,7 @@
 import pytest
 
 from ozy import OzyError
-from ozy.app import App, ensure_keys
+from ozy.app import App, ensure_keys, fixup_post_install
 from ozy.config import parse_ozy_conf, resolve
 
 
@@ -36,3 +36,12 @@ def test_ensure_keys():
     assert config
     with pytest.raises(OzyError):
         ensure_keys('nomad', config, 'type')
+
+
+def test_fixup_post_install():
+    assert fixup_post_install("") == []
+    assert fixup_post_install("this is a test") == [["this", "is", "a", "test"]]
+    assert fixup_post_install(["this is a test"]) == [["this", "is", "a", "test"]]
+    assert fixup_post_install(["this is a test", "two"]) == [["this", "is", "a", "test"], ["two"]]
+    assert fixup_post_install([["one", "two"], ["three", "four"]]) == [["one", "two"], ["three", "four"]]
+    assert fixup_post_install("this is 'a test'") == [["this", "is", "a test"]]
