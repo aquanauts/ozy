@@ -168,6 +168,16 @@ def install_all():
 
 
 @main.command()
+@click.argument("apps", metavar="APP", nargs=-1, type=str)
+def install(apps):
+    """Ensures all applications are installed at their current prevailing versions."""
+    config = load_config()
+    for app_name in apps:
+        app = App(app_name, config)
+        app.ensure_installed()
+
+
+@main.command()
 def sync():
     """
     Synchronise any local changes.
