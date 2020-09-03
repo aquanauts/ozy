@@ -5,6 +5,8 @@ python:
 os:
 - linux
 - osx
+dist: bionic
+osx_image: xcode12
 arch:
 - amd64
 - arm64
