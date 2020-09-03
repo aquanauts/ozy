@@ -1,18 +1,10 @@
 language: python
 jobs:
   include:
-    - name: Python 3.7 on Linux
-      os: linux
-      dist: bionic
-      python: '3.7'
     - name: Python 3.8 on Linux
       os: linux
       dist: bionic
       python: '3.8'
-    - name: Python 3.7 on OSX
-      os: osx
-      osx_image: xcode11
-      language: shell
     - name: Python 3.8 on OSX
       os: osx
       osx_image: xcode12
@@ -21,12 +13,12 @@ install:
 - make deps
 script:
 - make test
-- make dist
+- make dist OUTPUT_NAME=ozy-$TRAVIS_OS_NAME
 deploy:
   provider: releases
   api_key:
     secure: m4uXvOEIQO8lK3st0iqvRV/422xTMbSs9fZhhv/ujWzEuXa0vi7nj6eMsrhp2ePIcEuMvycKMzhYxY1NcDzKYJ1mUTiy6GQnzN6qBWIwQ8Byjt7ztn607Sn7vvSzh6Ql9a6RWMgWoZ5GkRm8RCV+13oF9qnl7Rj2X9jrToKj+zb5IVvMbFfb5cZCJ+Xv0mf4XtjAiMP//XhmRYzUDxg0zaVy7G356revbMaJd7Xoqeupgn7owFqEAOIDykyOWSgtyARHWaYCQGn/xkeV/RyM7c9rJ9rHhUrXQhXEREWbBpoA0Oc9aeX0T42nZ09M6Q4SNIkgzXFR4Jg81D5g7sge8dg3gSU8dbmroKXQQ4SDvppm0hIXY7sGXM7aKS0e9uzwq2/9B0NOOSIK6Xc+ApM0FmZ1w0LtpnulRjPsgMYCwA/tGoIDv1PWtxHHyj5khxzeRHV3FTMbOgfMKmFoI0uWWTgQsKa5SQKRHk2BoQtdtqxxD82TyxuWxi0OvoXdfv46z8N6TQaZvHhF09zaWnhzQAoIZKz8v2/O6JGG+W73fzv3rxibKDKbSQTb144TIDatrbtH2lYjxlZtj1sLf+avcj/p/WZ+AJFWW4j5yhLLOT9ykNiogro4aygYValvo2emCzshNcMT8zE1QXlXq+8XZTBATQ1K+Gz6eKEOkTj/ibY=
-  file: dist/ozy
+  file: dist/ozy-$TRAVIS_OS_NAME
   skip_cleanup: true
   draft: true
   on:
