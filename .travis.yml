@@ -1,6 +1,22 @@
 language: python
-python:
-- '3.7'
+jobs:
+  include:
+    - name: Python 3.7 on Linux
+      os: linux
+      dist: bionic
+      python: '3.7'
+    - name: Python 3.8 on Linux
+      os: linux
+      dist: bionic
+      python: '3.8'
+    - name: Python 3.7 on OSX
+      os: osx
+      osx_image: xcode11
+      language: shell
+    - name: Python 3.8 on OSX
+      os: osx
+      osx_image: xcode12
+      language: shell
 install:
 - make deps
 script:
