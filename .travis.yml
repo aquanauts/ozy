@@ -9,7 +9,7 @@ jobs:
       os: linux
       dist: bionic
       python: '3.8'
-    - name: Python 3.x on OSX
+    - name: Python 3.7 on OSX
       os: osx
       osx_image: xcode11
       language: shell
