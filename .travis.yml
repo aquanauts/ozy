@@ -1,12 +1,16 @@
 language: python
 jobs:
   include:
-    - name: Python on Linux
+    - name: Python 3.7 on Linux
+      os: linux
       dist: bionic
-      python:
-        - '3.7'
-        - '3.8'
-    - name: Python on OSX
+      python: '3.7'
+    - name: Python 3.8 on Linux
+      os: linux
+      dist: bionic
+      python: '3.8'
+    - name: Python 3.x on OSX
+      os: osx
       osx_image: xcode12
       language: shell
 install:
