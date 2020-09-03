@@ -1,5 +1,10 @@
 # ozy release notes
 
+## 0.0.6
+* Adds support for post installation commands
+* New command-line "install" to force install a subset of apps
+* Support for OSX
+
 ## 0.0.5
 * Add support for `pip` installers (via `conda`).
 
