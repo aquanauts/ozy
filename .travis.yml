@@ -11,6 +11,10 @@ jobs:
       python: '3.8'
     - name: Python 3.x on OSX
       os: osx
+      osx_image: xcode11
+      language: shell
+    - name: Python 3.8 on OSX
+      os: osx
       osx_image: xcode12
       language: shell
 install:
