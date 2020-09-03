@@ -1,15 +1,14 @@
 language: python
-python:
-- '3.7'
-- '3.8'
-os:
-- linux
-- osx
-dist: bionic
-osx_image: xcode12
-arch:
-- amd64
-- arm64
+jobs:
+  include:
+    - name: Python on Linux
+      dist: bionic
+      python:
+        - '3.7'
+        - '3.8'
+    - name: Python on OSX
+      osx_image: xcode12
+      language: shell
 install:
 - make deps
 script:
