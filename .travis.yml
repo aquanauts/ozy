@@ -21,6 +21,8 @@ deploy:
   file: dist/ozy-$TRAVIS_OS_NAME
   skip_cleanup: true
   draft: true
+  tag_name: $TRAVIS_TAG
+  name: ozy $TRAVIS_TAG
   on:
     repo: aquanauts/ozy
     tags: true
