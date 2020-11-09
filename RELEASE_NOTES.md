@@ -1,5 +1,8 @@
 # ozy release notes
 
+## 0.0.6
+* Add support for `zip` file releases
+
 ## 0.0.5
 * Add support for `pip` installers (via `conda`).
 
