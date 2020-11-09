@@ -11,6 +11,7 @@ PIP := $(VENV)/bin/pip
 DEPS := $(VENV)/.deps
 PYTHON := $(VENV)/bin/python3
 PYINSTALLER := $(VENV)/bin/pyinstaller
+OUTPUT_NAME?=ozy
 PYTHON_CMD := PYTHONPATH=$(shell pwd) $(PYTHON)
 TEST_TYPES=$(filter-out __pycache__,$(notdir $(wildcard test/*)))
 
@@ -42,7 +43,7 @@ $(TEST_TYPES): % : $(DEPS)
 
 .PHONY: dist
 dist: deps  ## create distribution
-	$(PYINSTALLER) --onefile bin/ozy
+	$(PYINSTALLER) --onefile --name $(OUTPUT_NAME) bin/ozy
 
 .PHONY: clean
 clean: ## remove venv and flush out pycache

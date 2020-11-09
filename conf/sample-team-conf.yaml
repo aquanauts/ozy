@@ -1,6 +1,6 @@
 ---
 name: Example Team Configuration
-ozy_version: 0.0.2
+ozy_version: 0.0.6
 templates:
   hashicorp:
     type: single_binary_zip

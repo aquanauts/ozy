@@ -18,8 +18,16 @@ PATH_TO_ME = None  # TODO find a better way
 IS_SINGLE_FILE = False  # TODO find a better way
 
 
+def _print_version(ctx, param, value):
+    if not value or ctx.resilient_parsing:
+        return
+    click.echo(f'ozy version {__version__}')
+    ctx.exit()
+
+
 @click.group()
 @click.option("--debug/--no-debug", default=False)
+@click.option('--version', is_flag=True, callback=_print_version, expose_value=False, is_eager=True)
 def main(debug):
     # TODO detect if redirected and don't do this, etc
     coloredlogs.install(
@@ -271,7 +279,9 @@ def app_main(path_to_ozy, argv0, arguments, is_single_file):
     IS_SINGLE_FILE = is_single_file
 
     invoked_as = os.path.basename(argv0)
-    if invoked_as in ('ozy', '__main__.py'):
+    # If we were invoked as "ourself" then run as if it was 'ozy'. We allow for anything called 'ozy' to be "us", to
+    # allow for symlinks called 'ozy', else we detect direct calling by checking if we were invoked via a symlink.
+    if invoked_as == 'ozy' or not os.path.islink(path_to_ozy):
         main(prog_name='ozy', args=arguments)
     else:
         coloredlogs.install(fmt='%(message)s', level='INFO')

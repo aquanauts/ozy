@@ -9,7 +9,7 @@
 To demonstrate `ozy`, we'll be using the sample configuration served directly from GitHub, along with the latest `ozy` binary built in releases. The sample config supports some of the [Hashicorp](https://www.hashicorp.com/) apps, and some other simple apps. There's a convenience single-step installer for this, suitable for piping directly into bash:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/aquanauts/ozy/master/conf/install.sh | bash
+curl -sL https://raw.githubusercontent.com/aquanauts/ozy/main/conf/install.sh | bash
 ```
 
 Behind the scenes this fetches a released `ozy` binary and executes `ozy init https://path/to/this/github/conf/sample-team-conf.yaml`.
