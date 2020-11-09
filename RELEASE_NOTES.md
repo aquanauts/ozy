@@ -1,5 +1,8 @@
 # ozy release notes
 
+## 0.0.7
+* Add support for `zip` file releases
+
 ## 0.0.6
 * Adds support for post installation commands
 * New command-line "install" to force install a subset of apps

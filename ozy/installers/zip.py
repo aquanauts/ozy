@@ -13,7 +13,7 @@ class SingleBinaryZipInstaller(Installer):
         super().__init__(name, config, 'url', app_name=name)
 
     def __str__(self):
-        return f'zip installer from {self.config("url")}'
+        return f'single_binary_zip installer from {self.config("url")}'
 
     def install(self, to_dir):
         app_name = self.config('app_name')
@@ -31,3 +31,23 @@ class SingleBinaryZipInstaller(Installer):
                 with zf.open(contents[0]) as in_file:
                     out_file.write(in_file.read())
             os.chmod(app_path, 0o774)
+
+
+class ZipInstaller(Installer):
+    def __init__(self, name, config):
+        super().__init__(name, config, 'url')
+        self.executable_path = config.get('executable_path', name)
+
+    def __str__(self):
+        return f'zip installer from {self.config("url")}'
+
+    def install(self, to_dir):
+        os.makedirs(to_dir)
+        url = self.config('url')
+        with NamedTemporaryFile() as temp_file:
+            download_to_file_obj(temp_file, url)
+            temp_file.flush()
+            zf = ZipFile(temp_file.name)
+            zf.extractall(to_dir)
+
+        os.chmod(os.path.join(to_dir, self.executable_path), 0o755)
