@@ -19,6 +19,7 @@ class CondaInstaller(Installer):
         channels = []
         for channel in self.config('channels'):
             channels += ['-c', channel]
+        conda_bin=self.config("conda_bin")
         args = ([conda_bin, 'create', '-y'] + channels
                 + ['-p', to_dir, f'{self.config("package")}={self.config("version")}'])
         _LOGGER.debug("Executing %s", " ".join(args))
