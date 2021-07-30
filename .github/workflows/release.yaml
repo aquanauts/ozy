@@ -31,6 +31,17 @@ jobs:
         run: make dist OUTPUT_NAME=${{ matrix.asset }}
       - name: Ensure version is correct
         run: dist/${{ matrix.asset }} --version | grep "$(echo $GITHUB_REF | cut -d / -f 3)"
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.asset }}
+          path: dist/${{ matrix.asset }}
+
+  upload:
+    needs: [ build ]
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
       - name: Upload binaries to release
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
