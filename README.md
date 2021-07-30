@@ -1,3 +1,4 @@
+[![Python test](https://github.com/aquanauts/ozy/actions/workflows/python.yaml/badge.svg)](https://github.com/aquanauts/ozy/actions/workflows/python.yaml)
 # ozy
 
 `ozy` is a Python program that makes it easy for you and your team to share and collaborate using commonly used programs such as `vault`, `nomad`, or `conda` on Linux.
@@ -136,6 +137,6 @@ To make a release of ozy:
 * Ensure the `RELEASE_NOTES.md` are updated
 * Push the changes to GitHub
 * Create a tag of the form `v1.2.3` and push it to GitHub
-* Travis will make the binaries automatically
+* GH actions will make the binaries automatically
 * Go to https://github.com/aquanauts/ozy/releases and check everything's ok
 * Update the release description and make non-draft if all's ok

@@ -1,0 +1,39 @@
+name: Create python release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-20.04
+            asset: ozy-linux
+          - os: macos-10.15
+            asset: ozy-osx
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python # Set Python version
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Deps
+        run: make deps
+      - name: Test
+        run: make test
+      - name: Dist
+        run: make dist OUTPUT_NAME=${{ matrix.asset }}
+      - name: Ensure version is correct
+        run: dist/${{ matrix.asset }} --version | grep "$(echo $GITHUB_REF | cut -d / -f 3)"
+      - name: Upload binaries to release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          files: dist/${{ matrix.asset }}
