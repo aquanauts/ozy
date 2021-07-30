@@ -1,5 +1,8 @@
 # ozy release notes
 
+## 0.0.8
+* Add support for `pyinstaller`-compressed `conda` binaries. Set `pyinstaller: True` to have `ozy` install the conda binary in a temporary place, then squash it with pyinstaller, and use the squashed version instead.
+
 ## 0.0.7
 * Add support for `zip` file releases
 

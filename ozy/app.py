@@ -97,7 +97,7 @@ class App:
                     shutil.rmtree(self.install_path)
                 os.rename(temp_install_dir, self.install_path)
             except Exception:
-                shutil.rmtree(temp_install_dir)
+                shutil.rmtree(temp_install_dir, ignore_errors=True)
                 raise
         for install_step in self._post_install:
             _LOGGER.info("Running post install step '%s'", " ".join(install_step))

@@ -36,7 +36,6 @@ class SingleBinaryZipInstaller(Installer):
 class ZipInstaller(Installer):
     def __init__(self, name, config):
         super().__init__(name, config, 'url')
-        self.executable_path = config.get('executable_path', name)
 
     def __str__(self):
         return f'zip installer from {self.config("url")}'
@@ -50,4 +49,4 @@ class ZipInstaller(Installer):
             zf = ZipFile(temp_file.name)
             zf.extractall(to_dir)
 
-        os.chmod(os.path.join(to_dir, self.executable_path), 0o755)
+        os.chmod(os.path.join(to_dir, self._executable_path), 0o755)
