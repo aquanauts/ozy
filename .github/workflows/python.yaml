@@ -1,0 +1,25 @@
+name: Python package
+
+on: [ push ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        python-version: [ 3.8 ]
+        os: [ ubuntu-20.04, macos-10.15 ]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python # Set Python version
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Deps
+        run: make deps
+      - name: Test
+        run: make test
+      - name: Dist
+        run: make dist OUTPUT_NAME=ozy-TODO-VERSION_HERE
