@@ -30,12 +30,13 @@ jobs:
       - name: Dist
         run: make dist OUTPUT_NAME=${{ matrix.asset }}
       - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v2
+        uses: meeDamian/github-release@v2.0.3
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dist/${{ matrix.asset }}
-          asset_name: ${{ matrix.asset }}
-          tag: ${{ github.ref }}
-          prerelease: true
-          overwrite: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: dist
+          name: ozy ${{ github.ref }}
           body: "An ozy release which needs to be updated"
+          asset_name: ${{ matrix.asset }}
+          draft: true
+          prerelease: true
+          allow_override: true
