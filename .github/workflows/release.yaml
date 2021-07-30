@@ -47,4 +47,4 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: true
-          files: dist/${{ matrix.asset }}
+          files: *
