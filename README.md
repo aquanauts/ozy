@@ -136,6 +136,6 @@ To make a release of ozy:
 * Ensure the `RELEASE_NOTES.md` are updated
 * Push the changes to GitHub
 * Create a tag of the form `v1.2.3` and push it to GitHub
-* Travis will make the binaries automatically
+* GH actions will make the binaries automatically
 * Go to https://github.com/aquanauts/ozy/releases and check everything's ok
 * Update the release description and make non-draft if all's ok

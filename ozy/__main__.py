@@ -21,7 +21,7 @@ IS_SINGLE_FILE = False  # TODO find a better way
 def _print_version(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
-    click.echo(f'ozy version {__version__}')
+    click.echo(f'ozy v{__version__}')
     ctx.exit()
 
 

@@ -30,10 +30,7 @@ jobs:
       - name: Dist
         run: make dist OUTPUT_NAME=${{ matrix.asset }}
       - name: Ensure version is correct
-#        run: dist/${{ matrix.asset }} --version | grep "$(echo $GITHUB_REF | cut -d / -f 3)"
-        run: |
-          dist/${{ matrix.asset }} --version
-          echo grep "$(echo $GITHUB_REF | cut -d / -f 3)"
+        run: dist/${{ matrix.asset }} --version | grep "$(echo $GITHUB_REF | cut -d / -f 3)"
       - name: Upload binaries to release
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
