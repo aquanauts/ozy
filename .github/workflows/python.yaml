@@ -6,7 +6,11 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ ubuntu-20.04, macos-10.15 ]
+        include:
+          - os: ubuntu-20.04
+            asset: ozy-linux
+          - os: macos-10.15
+            asset: ozy-osx
 
     runs-on: ${{ matrix.os }}
 
@@ -21,7 +25,7 @@ jobs:
       - name: Test
         run: make test
       - name: Build dist (but don't publish)
-        run: make dist OUTPUT_NAME=ozy-latest
+        run: make dist OUTPUT_NAME=ozy-${{ matrix.asset }}
       - name: Make a latest release
         #if: github.ref == 'refs/heads/main'
         uses: "marvinpinto/action-automatic-releases@latest"
