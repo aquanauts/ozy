@@ -11,9 +11,9 @@ jobs:
       matrix:
         include:
           - os: ubuntu-18.04
-            asset: ozy-linux
+            asset: ozy-Linux-x86_64
           - os: macos-10.15
-            asset: ozy-osx
+            asset: ozy-Darwin-x86_64
 
     runs-on: ${{ matrix.os }}
 
