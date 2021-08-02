@@ -1,5 +1,8 @@
 # ozy release notes
 
+## 0.0.10
+* Fix for detecting `ozy`. Basically, 0.0.6-0.0.9 were broken once packaged.
+
 ## 0.0.9
 * Build linux on Ubuntu 18.04 so we can run the release binaries on Ubuntu 18.04
 
