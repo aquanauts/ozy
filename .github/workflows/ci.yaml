@@ -22,17 +22,5 @@ jobs:
           python-version: '3.8'
       - name: Deps
         run: make deps
-      - name: Test
-        run: make test
-      - name: Build dist
-        run: make dist OUTPUT_NAME=${{ matrix.asset }}
-        # See https://github.com/marvinpinto/actions/issues/248
-#      - name: Make a latest release
-#        if: github.ref == 'refs/heads/main'
-#        uses: "marvinpinto/action-automatic-releases@latest"
-#        with:
-#          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-#          automatic_release_tag: "latest"
-#          prerelease: true
-#          title: "Latest prerelease build"
-#          files: dist/${{ matrix.asset }}
+      - name: Test and check dist
+        run: make test dist
