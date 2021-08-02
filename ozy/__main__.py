@@ -279,10 +279,11 @@ def app_main(path_to_ozy, argv0, arguments, is_single_file):
     IS_SINGLE_FILE = is_single_file
 
     invoked_as = os.path.basename(argv0)
-    # If we were invoked as "ourself" then run as if it was 'ozy'. We allow for anything called 'ozy' to be "us", rather
-    # than relying on the `argv0` being a symlink or similar: under pyinstaller we lose the full path to the original
-    # executable, so can't check if it's "really" ozy being called directly, or a symlink to ozy.
-    if invoked_as == 'ozy':
+    # If we were invoked as "ourself" (or something prefixed with ozy, to cover `ozy-Linux_x86_64` etc) then run as if
+    # it was 'ozy'. We allow for anything called 'ozy' to be "us", rather than relying on the `argv0` being a symlink or
+    # similar: under pyinstaller we lose the full path to the original executable, so can't check if it's "really" ozy
+    # being called directly, or a symlink to ozy.
+    if invoked_as.startswith('ozy'):
         main(prog_name='ozy', args=arguments)
     else:
         coloredlogs.install(fmt='%(message)s', level='INFO')
