@@ -1,0 +1,11 @@
+name: ozy
+dependencies:
+  - pip
+  - pip:
+    - pytest_watch
+    - click
+    - coloredlogs
+    - pyinstaller
+    - pyyaml
+    - requests
+    - tqdm

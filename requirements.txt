@@ -1,9 +1,0 @@
-pytest
-pytest_watch
-
-click
-coloredlogs
-pyinstaller
-pyyaml
-requests
-tqdm
