@@ -1,5 +1,8 @@
 # ozy release notes
 
+## 0.0.11
+* Fix race condition related to concurrent installations.
+
 ## 0.0.10
 * Fix for detecting `ozy`. Basically, 0.0.6-0.0.9 were broken once packaged.
 
