@@ -1,3 +1,4 @@
+import fcntl
 import logging
 import os
 import shutil
@@ -104,8 +105,17 @@ class App:
             check_call(install_step, cwd=self.install_path)
 
     def ensure_installed(self):
-        if not self.is_installed():
-            self.install()
+        if self._relocatable and self.is_installed(): return
+
+        lockfile_path = os.path.join(get_ozy_cache_dir(), '.install_lock')
+        with open(lockfile_path, 'w') as lockfile:
+            try:
+                fcntl.flock(lockfile.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                _LOGGER.info("Waiting for concurrent install to complete...")
+                fcntl.flock(lockfile.fileno(), fcntl.LOCK_EX)
+            if not self.is_installed():
+                self.install()
 
 
 def find_app(tool, version=None):
