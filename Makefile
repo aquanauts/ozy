@@ -43,7 +43,7 @@ $(TEST_TYPES): % : $(DEPS)
 
 .PHONY: dist
 dist: deps  ## create distribution
-	$(PYINSTALLER) --onefile --name $(OUTPUT_NAME) bin/ozy
+	$(PYINSTALLER) --onefile --name $(OUTPUT_NAME) -p . bin/ozy
 
 .PHONY: clean
 clean: ## remove venv and flush out pycache
