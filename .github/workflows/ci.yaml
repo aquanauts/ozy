@@ -24,3 +24,5 @@ jobs:
         run: make deps
       - name: Test and check dist
         run: make test dist
+      - name: Ensure it runs
+        run: dist/${{ matrix.asset }} --version
