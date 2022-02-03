@@ -19,13 +19,12 @@ def test_constructs_ok_with_correct_config():
     PipInstaller('test', dict(package='p', version='123'))
 
 
-@mock.patch('ozy.installers.pip.os.makedirs')
+@mock.patch('ozy.installers.pip.do_conda_install')
 @mock.patch('ozy.installers.pip.check_call')
-def test_installs(mock_check_call, mock_makedirs):
+def test_installs(mock_check_call, mock_do_conda_install):
     installer = PipInstaller('test', dict(package='package', version='1.0.0'))
     installer.install('/some/directory')
-    mock_makedirs.assert_called_with('/some/directory')
+    mock_do_conda_install.assert_called_with('conda', [], '/some/directory', ['pip'])
     mock_check_call.assert_has_calls([
-        mock.call(['conda', 'create', '-y', '-p', '/some/directory', 'pip']),
         mock.call(['/some/directory/bin/pip', 'install', 'package==1.0.0'])
     ])
