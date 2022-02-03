@@ -10,6 +10,19 @@ from ozy.installer import Installer
 _LOGGER = logging.getLogger(__name__)
 
 
+def do_conda_install(conda_bin, channels, to_dir, to_install):
+    os.makedirs(to_dir)
+    channels_args = []
+    for channel in channels:
+        channels_args += ['-c', channel]
+    with TemporaryDirectory(dir=Path(to_dir).parent) as conda_cache_dir:
+        env = os.environ.copy()
+        env['CONDA_PKGS_DIRS'] = conda_cache_dir
+        args = [conda_bin, 'create', '-y'] + channels_args + ['-p', to_dir] + to_install
+        _LOGGER.debug("Executing %s", " ".join(args))
+        check_call(args, env=env)
+
+
 class CondaInstaller(Installer):
     def __init__(self, name, config):
         super().__init__(name, config, 'package', 'version', channels=[], conda_bin="conda", pyinstaller=False)
@@ -18,13 +31,7 @@ class CondaInstaller(Installer):
         return f'conda app installer for {self.config("package")}'
 
     def _conda_install(self, to_dir: str, to_install: List[str]):
-        channels = []
-        for channel in self.config('channels'):
-            channels += ['-c', channel]
-        conda_bin = self.config("conda_bin")
-        args = [conda_bin, 'create', '-y'] + channels + ['-p', to_dir] + to_install
-        _LOGGER.debug("Executing %s", " ".join(args))
-        check_call(args)
+        do_conda_install(self.config("conda_bin"), self.config('channels'), to_dir, to_install)
 
     def install(self, to_dir):
         versioned_package = f'{self.config("package")}={self.config("version")}'
@@ -43,5 +50,4 @@ class CondaInstaller(Installer):
                 _LOGGER.debug("Executing %s", " ".join(args))
                 check_call(args)
         else:
-            os.makedirs(to_dir)
             self._conda_install(to_dir, [versioned_package])

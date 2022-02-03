@@ -166,6 +166,14 @@ def info():
                                     app_name, found_app)
 
 
+@main.command(name="list")
+def list_cmd():
+    """List all known package namess."""
+    config = load_config()
+    for app_name in config['apps']:
+        click.echo(app_name)
+
+
 @main.command()
 def install_all():
     """Ensures all applications are installed at their current prevailing versions."""
