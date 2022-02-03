@@ -83,6 +83,7 @@ apps:
       - -p
       - $INSTALL_DIR
     executable_path: bin/conda
+    extra_path_during_install: condabin  # workaround for conda recursive execution during installation (which deadlocks due to ozy install lock)
     post_install:
       - ['bin/conda', 'config', '--set', 'auto_update_conda', 'False']
   fly:

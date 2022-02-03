@@ -5,6 +5,7 @@ import shutil
 import shlex
 from subprocess import check_call
 from typing import Union, List
+import uuid
 
 from ozy import OzyError
 from ozy.config import resolve, load_config
@@ -77,37 +78,28 @@ class App:
     def is_installed(self) -> bool:
         return os.path.isdir(self.install_path)
 
-    def install(self):
+    def _install(self):
         _LOGGER.info("Installing %s %s", self.name, self.version)
-        if not self._relocatable:
-            _LOGGER.debug("Installing directly to final path")
-            if os.path.exists(self.install_path):
-                shutil.rmtree(self.install_path)
-            try:
-                self._installer.install(self.install_path)
-            except Exception:
-                shutil.rmtree(self.install_path)
-                raise
-        else:
-            temp_install_dir = self.install_path + ".tmp"
-            if os.path.exists(temp_install_dir):
-                shutil.rmtree(temp_install_dir)
-            try:
-                self._installer.install(temp_install_dir)
-                if os.path.exists(self.install_path):
-                    shutil.rmtree(self.install_path)
-                os.rename(temp_install_dir, self.install_path)
-            except Exception:
-                shutil.rmtree(temp_install_dir, ignore_errors=True)
-                raise
+        uniq_install_dir = f"{self.install_path}.{uuid.uuid4()}"
+        try:
+            self._installer.install(uniq_install_dir)
+            if self._relocatable:
+                os.rename(uniq_install_dir, self.install_path)
+            else:
+                os.symlink(uniq_install_dir, self.install_path)
+        except Exception:
+            shutil.rmtree(uniq_install_dir, ignore_errors=True)
+            raise
+
         for install_step in self._post_install:
             _LOGGER.info("Running post install step '%s'", " ".join(install_step))
             check_call(install_step, cwd=self.install_path)
 
     def ensure_installed(self):
-        if self._relocatable and self.is_installed(): return
+        if self.is_installed(): return
 
-        lockfile_path = os.path.join(get_ozy_cache_dir(), '.install_lock')
+        lockfile_path = f"{self.install_path}.lock"
+        os.makedirs(os.path.dirname(lockfile_path), exist_ok=True)
         with open(lockfile_path, 'w') as lockfile:
             try:
                 fcntl.flock(lockfile.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -115,7 +107,7 @@ class App:
                 _LOGGER.info("Waiting for concurrent install to complete...")
                 fcntl.flock(lockfile.fileno(), fcntl.LOCK_EX)
             if not self.is_installed():
-                self.install()
+                self._install()
 
 
 def find_app(tool, version=None):
