@@ -168,6 +168,7 @@ def info():
 
 @main.command(name="list")
 def list_cmd():
+    """List all known package namess."""
     config = load_config()
     for app_name in config['apps']:
         click.echo(app_name)
