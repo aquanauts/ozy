@@ -1,5 +1,10 @@
 # ozy release notes
 
+## 0.0.12
+* Create a lockfile per installation to allow more concurrency
+* Fix concurrent conda installations
+* Add list command
+
 ## 0.0.11
 * Fix race condition related to concurrent installations.
 
