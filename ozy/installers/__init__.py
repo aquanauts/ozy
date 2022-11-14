@@ -4,6 +4,7 @@ from ozy.installers.pip import PipInstaller
 from ozy.installers.shell import ShellInstaller
 from ozy.installers.tar import TarballInstaller
 from ozy.installers.zip import SingleBinaryZipInstaller, ZipInstaller
+from ozy.installers.docker import DockerInstaller
 
 SUPPORTED_INSTALLERS = dict(
     single_binary_zip=SingleBinaryZipInstaller,
@@ -12,5 +13,6 @@ SUPPORTED_INSTALLERS = dict(
     single_file=SingleFileInstaller,
     shell_install=ShellInstaller,
     conda=CondaInstaller,
-    pip=PipInstaller
+    pip=PipInstaller,
+    docker=DockerInstaller,
 )
