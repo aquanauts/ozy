@@ -10,6 +10,7 @@ from ozy.installers import CondaInstaller
 def test_should_install_with_regular_installer(mock_check_call):
     with TemporaryDirectory() as root:
         installer = CondaInstaller('test', dict(package='package', version='1.0.0', channels=['chan1', 'chan2']))
+        os.makedirs(root + '/some/directory')
         installer.install(root + '/some/directory')
         assert os.path.isdir(root + '/some/directory')
         mock_check_call.assert_called_with([
