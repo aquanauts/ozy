@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def do_conda_install(conda_bin, channels, to_dir, to_install):
-    os.makedirs(to_dir)
+    Path(to_dir).parent.mkdir(parents=True, exist_ok=True)
     channels_args = []
     for channel in channels:
         channels_args += ['-c', channel]

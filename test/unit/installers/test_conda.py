@@ -11,7 +11,7 @@ def test_should_install_with_regular_installer(mock_check_call):
     with TemporaryDirectory() as root:
         installer = CondaInstaller('test', dict(package='package', version='1.0.0', channels=['chan1', 'chan2']))
         installer.install(root + '/some/directory')
-        assert os.path.isdir(root + '/some/directory')
+        assert os.path.isdir(root + '/some')
         mock_check_call.assert_called_with([
             'conda', 'create', '-y',
             '-c', 'chan1',
