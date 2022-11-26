@@ -1,5 +1,9 @@
 # ozy release notes
 
+## 0.0.13
+* changed CondaInstaller to work with micromamba
+* added empty `__init__.py` files in test directory tree to appease vscode
+
 ## 0.0.12
 * Create a lockfile per installation to allow more concurrency
 * Fix concurrent conda installations
