@@ -1,5 +1,8 @@
 # ozy release notes
 
+## 0.0.14
+* Add support for ozy self-update
+
 ## 0.0.13
 * changed CondaInstaller to work with micromamba
 * added empty `__init__.py` files in test directory tree to appease vscode
