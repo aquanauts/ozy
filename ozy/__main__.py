@@ -1,14 +1,17 @@
 import logging
 import os
+from pathlib import Path
 import shutil
 import sys
+
+from packaging import version
 
 import click
 import coloredlogs
 
 from ozy import OzyError, __version__
 from ozy.app import App, find_app
-from ozy.config import load_ozy_user_conf, save_ozy_user_conf, parse_ozy_conf, load_config
+from ozy.config import load_ozy_user_conf, save_ozy_user_conf, parse_ozy_conf, load_config, safe_expand
 from ozy.files import ensure_ozy_dirs, get_ozy_bin_dir, softlink, get_ozy_dir
 from ozy.utils import download_to, restore_overridden_env_vars
 
@@ -113,6 +116,19 @@ def update(dry_run, url):
     download_to(tmp_filename, url)
     new_conf_root = parse_ozy_conf(tmp_filename)
     old_conf_root = parse_ozy_conf(ozy_conf_filename)
+
+    new_ozy_version: str = new_conf_root['ozy_version']
+    if version.parse(__version__) < version.parse(new_ozy_version):
+        _LOGGER.info('Ozy update to %s is mandated by your team config', new_ozy_version)
+        download_url = safe_expand(dict(version=new_ozy_version), new_conf_root['ozy_download'])
+        _LOGGER.info('Downloading from %s', download_url)
+        download_path = Path(get_ozy_dir()) / 'bin' / 'ozy.tmp'
+        download_path.unlink(missing_ok=True)
+        download_to(str(download_path), download_url)
+        download_path.chmod(0o755)
+        new_ozy_exe = str(download_path)
+        environment = restore_overridden_env_vars(os.environ)
+        os.execve(new_ozy_exe, [new_ozy_exe, 'update'], environment)
 
     changed = False
     for app, new_conf in new_conf_root['apps'].items():
