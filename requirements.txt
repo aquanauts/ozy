@@ -3,6 +3,7 @@ pytest_watch
 
 click
 coloredlogs
+packaging
 pyinstaller
 pyyaml
 requests
