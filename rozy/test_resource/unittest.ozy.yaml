@@ -1,0 +1,65 @@
+---
+name: Aquatic Team Configuration
+ozy_version: 0.0.14
+ozy_download: https://github.com/aquanauts/ozy/releases/download/v{version}/ozy-{ozy_os}-{ozy_machine}
+templates:
+  aquatic_conda:
+    type: conda
+    conda_bin: mamba
+    relocatable: false
+    channels:
+      - nodefaults
+apps:
+  single_binary_zip_app:
+    version: 1.10.1
+    type: single_binary_zip
+    url: some_url_1
+    executable_path: bin/single_binary_zip_app
+  tarball_app:
+    version: 0.7.0
+    type: tarball
+    url: some_url_2
+    executable_path: bin/tarball_app
+  shell_app:
+    version: 4.11.0
+    type: shell_install
+    url: some_url_3
+    shell_args:
+      - -u
+      - -b
+      - -p
+      - $INSTALL_DIR
+    executable_path: bin/shell_app
+    extra_path_during_install: extra_path
+  pip_app:
+    version: 1.20.4
+    type: pip
+    package: pip_package
+    executable_path: bin/pip_app
+  conda_app:
+    version: '45'
+    type: conda
+    package: conda-package
+    executable_path: bin/conda_app
+    conda_bin: conda_bin
+    channels:
+      - channel_a
+      - channel_b
+  file_app:
+    version: 6.6.0
+    type: single_file
+    url: some_url_4
+  explicitly_relocatable_app:
+    version: 1.10.1
+    type: single_binary_zip
+    url: some_url_1
+    relocatable: true
+  explicitly_nonrelocatable_app:
+    version: 1.10.1
+    type: single_binary_zip
+    url: some_url_1
+    relocatable: false
+  unspecified_relocatability_app:
+    version: 1.10.1
+    type: single_binary_zip
+    url: some_url_1
