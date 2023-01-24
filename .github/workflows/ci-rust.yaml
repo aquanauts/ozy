@@ -1,0 +1,46 @@
+name: Rust CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        opts:
+          - --release
+          - ""
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --verbose --all-features ${{ matrix.version }}
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --verbose ${{ matrix.version }}
+
+  pre-commit-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+      - uses: pre-commit/action@v3.0.0
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          default: true
+      - run:
+          which cargo
+      - run: pre-commit run --all
