@@ -1,6 +1,9 @@
 name: Python test
 
-on: [ merge ] # Disable this so it doesn't run on every push to this branch; revert before actually merging :)
+on:
+  pull_request:
+    types: [reopened]
+# Disable this so it doesn't run on every push to this branch; revert before actually merging :)
 
 jobs:
   build:
