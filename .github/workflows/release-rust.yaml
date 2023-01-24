@@ -23,14 +23,14 @@ jobs:
           toolchain: stable
           target: ${{ matrix.target }}
       - name: Build
-        run: cargo build --release --verbose --target=${{ matrix.target }}
+        run: cargo build --release --verbose --target=${{ matrix.target }} --manifest-path rozy/Cargo.toml
       - name: Ensure version is correct
         run: |
           (cargo run --release --target=${{ matrix.target }} -- --version) | grep "version$(echo ${{ github.ref_name }} | tr 'v' ' '})"
       - uses: actions/upload-artifact@v2
         with:
           name: ozy
-          path: target/${{ matrix.target }}/release/ozy
+          path: rozy/target/${{ matrix.target }}/release/ozy
 
 #  upload:
 #    needs: [ build ]

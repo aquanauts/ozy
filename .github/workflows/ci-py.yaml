@@ -1,6 +1,6 @@
 name: Python test
 
-on: [ push ]
+on: [ merge ] # Disable this so it doesn't run on every push to this branch; revert before actually merging :)
 
 jobs:
   build:
