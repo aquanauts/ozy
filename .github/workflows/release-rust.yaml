@@ -1,6 +1,7 @@
 name: Create Rust release
 
 on:
+  pull_request:
   push:
     tags:
       - 'v*'
@@ -35,24 +36,24 @@ jobs:
           name: ozy
           path: target/${{ matrix.target }}/release/ozy
 
- upload:
-   needs: [ build ]
-   runs-on: ubuntu-latest
-   steps:
-     - name: Download all workflow run artifacts
-       uses: actions/download-artifact@v3
-     - name: Upload binaries to release
-       uses: marvinpinto/action-automatic-releases@latest
-       with:
-         repo_token: "${{ secrets.GITHUB_TOKEN }}"
-         prerelease: true
-         files: "**/ozy"
+#  upload:
+#    needs: [ build ]
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Download all workflow run artifacts
+#        uses: actions/download-artifact@v3
+#      - name: Upload binaries to release
+#        uses: marvinpinto/action-automatic-releases@latest
+#        with:
+#          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+#          prerelease: true
+#          files: "**/ozy"
 
- cargo:
-   needs: [ build ]
-   runs-on: ubuntu-latest
-   steps:
-     - uses: actions/checkout@v3
-     - uses: katyo/publish-crates@v1
-       with:
-         registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+#  cargo:
+#    needs: [ build ]
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v3
+#      - uses: katyo/publish-crates@v1
+#        with:
+#          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
