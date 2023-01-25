@@ -18,7 +18,7 @@ clap = { version = "4.0.29", features = ["derive"] }
 flate2 = "1.0.25"
 tar = "0.4.38"
 regex = "1.7.0"
-bzip2 = "0.4.3"
+bzip2 = "0.4.4"
 xz2 = "0.1"
 which = "4.3.0"
 zip = "0.6.3"
