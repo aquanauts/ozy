@@ -27,6 +27,8 @@ jobs:
         run: sudo apt-get install musl-tools
       - name: Build
         run: cargo build --release --verbose --target=${{ matrix.target }} --manifest-path rozy/Cargo.toml
+      - name: Ensure version is correct
+        run: rozy/target/${{ matrix.target }}/release/ozy --version | grep "$(echo $GITHUB_REF | cut -d / -f 3)"
       - name: Rename
         run: mv rozy/target/${{ matrix.target }}/release/ozy rozy/target/${{ matrix.target }}/release/${{ matrix.asset }}
       - name: Upload binaries to release
