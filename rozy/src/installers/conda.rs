@@ -1,5 +1,5 @@
+use super::super::files::delete_if_exists;
 use super::installer::Installer;
-
 use anyhow::{anyhow, Error, Result};
 
 use tempfile::tempdir;
@@ -18,7 +18,12 @@ pub fn conda_install(
     to_dir: &std::path::Path,
     to_install: &[String],
 ) -> Result<()> {
-    std::fs::create_dir_all(to_dir)?;
+    if let Some(parent) = to_dir.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+
+    // Micromamba installer requires this path to be free
+    delete_if_exists(to_dir)?;
 
     let conda_cache_dir = tempdir()?;
     let mut command = std::process::Command::new(conda_bin);
