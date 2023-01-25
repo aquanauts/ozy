@@ -221,6 +221,18 @@ impl PartialEq for App {
 
 impl Eq for App {}
 
+impl std::fmt::Display for App {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "{} {}: {}",
+            self.name,
+            self.version,
+            self.installer.describe()
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use serde_yaml::Mapping;

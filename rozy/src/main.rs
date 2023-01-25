@@ -300,7 +300,58 @@ fn list() -> Result<()> {
     let config = config::load_config(None)?;
     let apps = get_apps(&config)?;
     for app in apps.iter() {
-        eprintln!("{}", app.name);
+        println!("{}", app.name);
+    }
+
+    Ok(())
+}
+
+fn show_path_warning() -> Result<()> {
+    let ozy_bin_dir = files::get_ozy_bin_dir()?.to_str().unwrap().to_owned();
+
+    println!("{:-<1$}", "", 80);
+    println!("Please ensure '{}' is on your path", ozy_bin_dir);
+    println!("bash shell users:");
+    println!(
+        "  bash$ echo -e '# ozy support\\nexport PATH={}:$PATH' >> ~/.bashrc",
+        ozy_bin_dir
+    );
+    println!("  then restart your shell sessions");
+    println!("zsh shell users:");
+    println!("  zsh$ # path+=({})\\nexport PATH", ozy_bin_dir);
+    println!("fish shell users: ");
+    println!(
+        "  fish$ set --universal fish_user_paths {} $fish_user_paths",
+        ozy_bin_dir
+    );
+    println!("{:-<1$}", "", 80);
+
+    Ok(())
+}
+
+fn info() -> Result<()> {
+    let is_path_ok = check_path(&files::get_ozy_bin_dir()?)?;
+    if !is_path_ok {
+        show_path_warning()?;
+    }
+
+    let user_config = config::get_ozy_user_conf()?;
+    let team_url = match user_config.get("url") {
+        Some(v) => v.as_str().unwrap(),
+        None => "(unset)",
+    };
+    println!("Team URL: {}", team_url);
+
+    let config = config::load_config(None)?;
+    let team_config_name = match config.get("name") {
+        Some(v) => v.as_str().unwrap(),
+        None => "(unset)",
+    };
+    println!("Team config name: {}", team_config_name);
+
+    let apps = get_apps(&config)?;
+    for app in apps.iter() {
+        println!("  {}", app);
     }
 
     Ok(())
@@ -357,6 +408,9 @@ install:
     #[clap(about = "Initialise and install ozy, with configuration from the given URL")]
     Init { url: String },
 
+    #[clap(about = "Print information about the installation and configuration")]
+    Info,
+
     #[clap(about = "List all the managed apps")]
     List,
 
@@ -404,6 +458,7 @@ fn main() -> Result<(), Error> {
             Commands::Init { url } => init(&exe_path, url),
             Commands::Install { app_names } => install(app_names),
             Commands::InstallAll => install_all(),
+            Commands::Info => info(),
             Commands::List => list(),
             Commands::MakefileConfig {
                 makefile_var,
