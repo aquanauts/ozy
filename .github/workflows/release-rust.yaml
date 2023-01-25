@@ -33,5 +33,5 @@ jobs:
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          prerelease: true
+          prerelease: false
           files: rozy/target/${{ matrix.target }}/release/${{ matrix.asset }}
