@@ -1,9 +1,11 @@
 name: Create Rust release
 
-on:
-  push:
-    tags:
-      - 'v0.1.*'
+# on:
+#   push:
+#     tags:
+#       - 'v0.1.*'
+
+on: push
 
 env:
   CARGO_TERM_COLOR: always
@@ -31,13 +33,26 @@ jobs:
         run: sudo apt-get install musl-tools
       - name: Build
         run: cargo build --release --verbose --target=${{ matrix.target }} --manifest-path rozy/Cargo.toml
-      - name: Ensure version is correct
-        run: rozy/target/${{ matrix.target }}/release/ozy --version | grep "$(echo $GITHUB_REF_NAME | cut -c2-)"
+      # - name: Ensure version is correct
+      #   run: rozy/target/${{ matrix.target }}/release/ozy --version | grep "$(echo $GITHUB_REF_NAME | cut -c2-)"
       - name: Rename
         run: mv rozy/target/${{ matrix.target }}/release/ozy rozy/target/${{ matrix.target }}/release/${{ matrix.asset }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.asset }}
+          path: rozy/target/${{ matrix.target }}/release/${{ matrix.asset }}
+
+  upload:
+    needs: [ build ]
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
       - name: Upload binaries to release
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "testing"
           prerelease: true
-          files: rozy/target/${{ matrix.target }}/release/${{ matrix.asset }}
+          files: "**/ozy-*"
+
