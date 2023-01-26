@@ -35,9 +35,21 @@ jobs:
         run: rozy/target/${{ matrix.target }}/release/ozy --version | grep "$(echo $GITHUB_REF_NAME | cut -c2-)"
       - name: Rename
         run: mv rozy/target/${{ matrix.target }}/release/ozy rozy/target/${{ matrix.target }}/release/${{ matrix.asset }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.asset }}
+          path: rozy/target/${{ matrix.target }}/release/${{ matrix.asset }}
+
+  upload:
+    needs: [ build ]
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
       - name: Upload binaries to release
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: true
-          files: rozy/target/${{ matrix.target }}/release/${{ matrix.asset }}
+          files: "**/ozy-*"
+
