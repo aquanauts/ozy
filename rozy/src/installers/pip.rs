@@ -1,5 +1,5 @@
 use crate::installers::conda::conda_install;
-
+use crate::utils::run_with_stderr_to_stdout;
 use super::installer::Installer;
 
 use anyhow::{anyhow, Error, Result};
@@ -43,11 +43,12 @@ impl Installer for Pip {
         )?;
         let pip_path = to_dir.join("bin").join("pip");
         let mut command = std::process::Command::new(pip_path);
+        command.stdout(std::process::Stdio::piped());
         command.arg("install");
         command.arg(format!("{}=={}", self.package, self.version));
 
-        let output = command.output().unwrap();
-        if !output.status.success() {
+        let output = run_with_stderr_to_stdout(command)?;
+        if !output.success() {
             return Err(anyhow!("Pip installation exited with {:?}", output));
         }
 

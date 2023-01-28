@@ -1,6 +1,7 @@
 use super::installer::Installer;
 use crate::utils::download_to;
 use tempfile::tempdir;
+use crate::utils::run_with_stderr_to_stdout;
 
 use anyhow::{anyhow, Context, Error, Result};
 
@@ -75,8 +76,8 @@ impl Installer for Shell {
             command.arg(arg);
         }
 
-        let output = command.output().unwrap();
-        if !output.status.success() {
+        let output = run_with_stderr_to_stdout(command)?;
+        if !output.success() {
             return Err(anyhow!("Shell installer exited with {:?}", output));
         }
 
