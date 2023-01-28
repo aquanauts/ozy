@@ -1,7 +1,7 @@
 use super::installer::Installer;
 use crate::utils::download_to;
-use tempfile::tempdir;
 use crate::utils::run_with_stderr_to_stdout;
+use tempfile::tempdir;
 
 use anyhow::{anyhow, Context, Error, Result};
 

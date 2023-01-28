@@ -1,5 +1,5 @@
 use anyhow::Result;
-use std::io::{BufReader, BufRead};
+use std::io::{BufRead, BufReader};
 
 pub fn download_to(dest_path: &std::path::PathBuf, url: &str) -> Result<()> {
     let tmp_dest_path = dest_path.clone().with_extension("tmp");
@@ -11,7 +11,9 @@ pub fn download_to(dest_path: &std::path::PathBuf, url: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn run_with_stderr_to_stdout(mut command: std::process::Command) -> Result<std::process::ExitStatus> {
+pub fn run_with_stderr_to_stdout(
+    mut command: std::process::Command,
+) -> Result<std::process::ExitStatus> {
     let mut spawned = command.spawn().unwrap();
 
     let stdout = spawned.stdout.as_mut().unwrap();

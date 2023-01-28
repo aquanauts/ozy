@@ -1,6 +1,6 @@
+use super::installer::Installer;
 use crate::files::delete_if_exists;
 use crate::utils::run_with_stderr_to_stdout;
-use super::installer::Installer;
 use anyhow::{anyhow, Error, Result};
 
 use tempfile::tempdir;
