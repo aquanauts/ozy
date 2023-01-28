@@ -1,6 +1,6 @@
 ---
 name: Example Team Configuration
-ozy_version: 0.0.6
+ozy_version: 0.1.4
 ozy_download: https://github.com/aquanauts/ozy/releases/download/v{version}/ozy-{ozy_os}-{ozy_machine}
 templates:
   hashicorp:
