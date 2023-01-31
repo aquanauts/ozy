@@ -1,0 +1,55 @@
+name: Create Rust release
+
+on:
+  push:
+    tags:
+      - 'v0.1.*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-musl
+            asset: ozy-Linux-x86_64
+            runs-on: ubuntu-18.04
+          - target: x86_64-apple-darwin
+            asset: ozy-Darwin-x86_64
+            runs-on: macos-12
+
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+      - if: ${{ contains(matrix.target, '-musl') }}
+        run: sudo apt-get install musl-tools
+      - name: Build
+        run: cargo build --release --verbose --target=${{ matrix.target }} --manifest-path rozy/Cargo.toml
+      - name: Ensure version is correct
+        run: rozy/target/${{ matrix.target }}/release/ozy --version | grep "$(echo $GITHUB_REF_NAME | cut -c2-)"
+      - name: Rename
+        run: mv rozy/target/${{ matrix.target }}/release/ozy rozy/target/${{ matrix.target }}/release/${{ matrix.asset }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.asset }}
+          path: rozy/target/${{ matrix.target }}/release/${{ matrix.asset }}
+
+  upload:
+    needs: [ build ]
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
+      - name: Upload binaries to release
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: true
+          files: "**/ozy-*"
+
