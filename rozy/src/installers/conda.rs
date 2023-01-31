@@ -1,6 +1,7 @@
 use super::installer::Installer;
 use crate::files::delete_if_exists;
 use anyhow::{anyhow, Error, Result};
+use std::process::{Command, Stdio};
 
 use tempfile::tempdir;
 
@@ -26,9 +27,9 @@ pub fn conda_install(
     delete_if_exists(to_dir)?;
 
     let conda_cache_dir = tempdir()?;
-    let mut command = std::process::Command::new(conda_bin);
+    let mut command = Command::new(conda_bin);
     command.env("CONDA_PKGS_DIRS", conda_cache_dir.path());
-    command.stdout(Into::<std::process::Stdio>::into(os_pipe::dup_stderr()?));
+    command.stdout(Stdio::from(os_pipe::dup_stderr()?));
 
     command.arg("create");
     command.arg("-y");

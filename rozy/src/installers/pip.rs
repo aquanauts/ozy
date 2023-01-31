@@ -1,7 +1,7 @@
 use super::installer::Installer;
 use crate::installers::conda::conda_install;
-
 use anyhow::{anyhow, Error, Result};
+use std::process::{Command, Stdio};
 
 pub struct Pip {
     package: String,
@@ -41,8 +41,8 @@ impl Installer for Pip {
             &[String::from("pip")],
         )?;
         let pip_path = to_dir.join("bin").join("pip");
-        let mut command = std::process::Command::new(pip_path);
-        command.stdout(Into::<std::process::Stdio>::into(os_pipe::dup_stderr()?));
+        let mut command = Command::new(pip_path);
+        command.stdout(Stdio::from(os_pipe::dup_stderr()?));
 
         command.arg("install");
         command.arg(format!("{}=={}", self.package, self.version));
