@@ -29,7 +29,6 @@ pub fn conda_install(
     let conda_cache_dir = tempdir()?;
     let mut command = std::process::Command::new(conda_bin);
     command.env("CONDA_PKGS_DIRS", conda_cache_dir.path());
-    command.stdout(std::process::Stdio::piped());
 
     command.arg("create");
     command.arg("-y");

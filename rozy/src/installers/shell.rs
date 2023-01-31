@@ -60,7 +60,6 @@ impl Installer for Shell {
         download_to(&file, &self.url)?;
 
         let mut command = std::process::Command::new("/bin/bash");
-        command.stdout(std::process::Stdio::piped());
         if let Some(extra_path) = &self.extra_path_during_install {
             let path = format!(
                 "{}:{}",

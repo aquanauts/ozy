@@ -43,7 +43,6 @@ impl Installer for Pip {
         )?;
         let pip_path = to_dir.join("bin").join("pip");
         let mut command = std::process::Command::new(pip_path);
-        command.stdout(std::process::Stdio::piped());
         command.arg("install");
         command.arg(format!("{}=={}", self.package, self.version));
 
