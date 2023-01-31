@@ -1,6 +1,5 @@
 use super::installer::Installer;
 use crate::files::delete_if_exists;
-use crate::utils::run_with_stderr_to_stdout;
 use anyhow::{anyhow, Error, Result};
 
 use tempfile::tempdir;
@@ -29,6 +28,7 @@ pub fn conda_install(
     let conda_cache_dir = tempdir()?;
     let mut command = std::process::Command::new(conda_bin);
     command.env("CONDA_PKGS_DIRS", conda_cache_dir.path());
+    command.stdout(Into::<std::process::Stdio>::into(os_pipe::dup_stderr()?));
 
     command.arg("create");
     command.arg("-y");
@@ -45,9 +45,9 @@ pub fn conda_install(
         command.arg(arg);
     }
 
-    let output = run_with_stderr_to_stdout(command)?;
-    if !output.success() {
-        return Err(anyhow!("Conda installation exited with {:#?}", output));
+    let mut output = command.spawn().unwrap();
+    if !output.wait()?.success() {
+        return Err(anyhow!("Conda installation exited with error"));
     }
 
     Ok(())

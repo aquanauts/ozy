@@ -1,6 +1,5 @@
 use super::installer::Installer;
 use crate::utils::download_to;
-use crate::utils::run_with_stderr_to_stdout;
 use tempfile::tempdir;
 
 use anyhow::{anyhow, Context, Error, Result};
@@ -60,6 +59,8 @@ impl Installer for Shell {
         download_to(&file, &self.url)?;
 
         let mut command = std::process::Command::new("/bin/bash");
+        command.stdout(Into::<std::process::Stdio>::into(os_pipe::dup_stderr()?));
+
         if let Some(extra_path) = &self.extra_path_during_install {
             let path = format!(
                 "{}:{}",
@@ -75,9 +76,9 @@ impl Installer for Shell {
             command.arg(arg);
         }
 
-        let output = run_with_stderr_to_stdout(command)?;
-        if !output.success() {
-            return Err(anyhow!("Shell installer exited with {:?}", output));
+        let mut output = command.spawn().unwrap();
+        if !output.wait()?.success() {
+            return Err(anyhow!("Shell installer exited with error"));
         }
 
         Ok(())
