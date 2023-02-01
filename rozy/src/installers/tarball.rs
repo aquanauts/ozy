@@ -50,9 +50,9 @@ impl Installer for Tarball {
         let reader: Box<dyn Read> = match infer::get_from_path(file.path())? {
             Some(t) => {
                 match t.extension() {
-                    "_gz" => Box::new(GzDecoder::new(downloaded_file)),
-                    "_bz2" => Box::new(BzDecoder::new(downloaded_file)),
-                    "_xz" => Box::new(XzDecoder::new(downloaded_file)),
+                    "gz" => Box::new(GzDecoder::new(downloaded_file)),
+                    "bz2" => Box::new(BzDecoder::new(downloaded_file)),
+                    "xz" => Box::new(XzDecoder::new(downloaded_file)),
                     _ => return Err(anyhow!("unsupported archive compression type {}", t)),
                 }
             },
