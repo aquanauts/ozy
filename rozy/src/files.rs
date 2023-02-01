@@ -69,6 +69,12 @@ pub fn softlink(from_command: &str, to_command: &str) -> Result<bool> {
         // TODO: unlink from_command_path? Also is this equivalent to what's happening in Python where we unlink path_to_app?
     }
 
-    std::os::unix::fs::symlink(to_command_path, from_command_path)?;
+    std::os::unix::fs::symlink(&to_command_path, &from_command_path).with_context(|| {
+        format!(
+            "While symlinking {} to {}",
+            &from_command_path.display(),
+            &to_command_path.display()
+        )
+    })?;
     Ok(was_there)
 }
