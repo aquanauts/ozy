@@ -1,5 +1,5 @@
 use super::installer::Installer;
-use crate::{utils::download_to, installers::installer::run_subcommand_for_installer};
+use crate::{installers::installer::run_subcommand_for_installer, utils::download_to};
 use tempfile::tempdir;
 
 use anyhow::{anyhow, Context, Error, Result};
@@ -75,11 +75,11 @@ impl Installer for Shell {
             args.push(arg);
         }
 
-        let subcommand_result = run_subcommand_for_installer("/bin/bash", args.into_iter(), env.into_iter());
+        let subcommand_result =
+            run_subcommand_for_installer("/bin/bash", args.into_iter(), env.into_iter());
         if subcommand_result.is_err() {
             return Err(anyhow!("Conda installation exited with error"));
         }
-
 
         Ok(())
     }
