@@ -1,6 +1,5 @@
 use super::installer::Installer;
-use crate::utils::download_to;
-use std::process::{Command, Stdio};
+use crate::{utils::download_to, installers::installer::run_subcommand_for_installer};
 use tempfile::tempdir;
 
 use anyhow::{anyhow, Context, Error, Result};
@@ -59,28 +58,28 @@ impl Installer for Shell {
         let file = dir.path().join("installer.sh");
         download_to(&file, &self.url)?;
 
-        let mut command = Command::new("/bin/bash");
-        command.stdout(Stdio::from(os_pipe::dup_stderr()?));
+        let path;
+        let mut env = vec![("INSTALL_DIR", to_dir.as_os_str().to_str().unwrap())];
 
         if let Some(extra_path) = &self.extra_path_during_install {
-            let path = format!(
+            path = format!(
                 "{}:{}",
                 extra_path,
                 std::env::var("PATH").context("While checking $PATH")?
             );
-            command.env("PATH", path);
+            env.push(("PATH", &path));
         }
-        command.env("INSTALL_DIR", to_dir.as_os_str().to_str().unwrap());
 
-        command.arg(file.as_os_str().to_str().unwrap());
+        let mut args = vec![file.as_os_str().to_str().unwrap()];
         for arg in &self.shell_args {
-            command.arg(arg);
+            args.push(arg);
         }
 
-        let mut output = command.spawn().unwrap();
-        if !output.wait()?.success() {
-            return Err(anyhow!("Shell installer exited with error"));
+        let subcommand_result = run_subcommand_for_installer("/bin/bash", args.into_iter(), env.into_iter());
+        if subcommand_result.is_err() {
+            return Err(anyhow!("Conda installation exited with error"));
         }
+
 
         Ok(())
     }

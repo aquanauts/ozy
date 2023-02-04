@@ -1,7 +1,6 @@
-use super::installer::Installer;
+use super::installer::{run_subcommand_for_installer, Installer};
 use crate::files::delete_if_exists;
 use anyhow::{anyhow, Error, Result};
-use std::process::{Command, Stdio};
 
 use tempfile::tempdir;
 
@@ -14,7 +13,7 @@ pub struct Conda {
 }
 
 pub fn conda_install(
-    conda_bin: &String,
+    conda_bin: &str,
     channels: &[String],
     to_dir: &std::path::Path,
     to_install: &[String],
@@ -27,27 +26,21 @@ pub fn conda_install(
     delete_if_exists(to_dir)?;
 
     let conda_cache_dir = tempdir()?;
-    let mut command = Command::new(conda_bin);
-    command.env("CONDA_PKGS_DIRS", conda_cache_dir.path());
-    command.stdout(Stdio::from(os_pipe::dup_stderr()?));
+    let env = vec![("CONDA_PKGS_DIRS", conda_cache_dir.path().to_str().unwrap())];
 
-    command.arg("create");
-    command.arg("-y");
-
+    let mut args = vec!["create", "-y", "-q", "-p", to_dir.to_str().unwrap()];
     for arg in channels.iter() {
-        command.arg("-c");
-        command.arg(arg);
+        args.push("-c");
+        args.push(arg);
     }
-
-    command.arg("-p");
-    command.arg(to_dir);
 
     for arg in to_install.iter() {
-        command.arg(arg);
+        args.push(arg);
     }
 
-    let mut output = command.spawn().unwrap();
-    if !output.wait()?.success() {
+    let subcommand_result =
+        run_subcommand_for_installer(conda_bin, args.into_iter(), env.into_iter());
+    if subcommand_result.is_err() {
         return Err(anyhow!("Conda installation exited with error"));
     }
 
