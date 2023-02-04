@@ -28,7 +28,7 @@ pub fn conda_install(
     let conda_cache_dir = tempdir()?;
     let env = vec![("CONDA_PKGS_DIRS", conda_cache_dir.path().to_str().unwrap())];
 
-    let mut args = vec!["create", "-y", "-q", "-p", to_dir.to_str().unwrap()];
+    let mut args = vec!["create", "-y", "-p", to_dir.to_str().unwrap()];
     for arg in channels.iter() {
         args.push("-c");
         args.push(arg);
