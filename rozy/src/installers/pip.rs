@@ -1,7 +1,5 @@
-use crate::installers::conda::conda_install;
-
 use super::installer::Installer;
-
+use crate::installers::{conda::conda_install, installer::run_subcommand_for_installer};
 use anyhow::{anyhow, Error, Result};
 
 pub struct Pip {
@@ -41,14 +39,18 @@ impl Installer for Pip {
             to_dir,
             &[String::from("pip")],
         )?;
-        let pip_path = to_dir.join("bin").join("pip");
-        let mut command = std::process::Command::new(pip_path);
-        command.arg("install");
-        command.arg(format!("{}=={}", self.package, self.version));
 
-        let output = command.output().unwrap();
-        if !output.status.success() {
-            return Err(anyhow!("Pip installation exited with {:?}", output));
+        let pip_command = to_dir.join("bin").join("pip");
+        let version_arg = format!("{}=={}", self.package, self.version);
+        let args = vec!["install", &version_arg];
+
+        let subcommand_result = run_subcommand_for_installer(
+            pip_command.to_str().unwrap(),
+            args.into_iter(),
+            std::iter::empty(),
+        );
+        if subcommand_result.is_err() {
+            return Err(anyhow!("Pip installation exited with error"));
         }
 
         Ok(())
