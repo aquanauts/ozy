@@ -29,10 +29,7 @@ pub fn download_to(dest_path: &std::path::PathBuf, url: &str) -> Result<()> {
         wait_duration *= 2;
         num_tries -= 1;
 
-        response = match err.is_redirect() {
-            true => reqwest::blocking::get(err.url().unwrap().clone()),
-            false => reqwest::blocking::get(url),
-        };
+        response = reqwest::blocking::get(url);
     }
 
     let response = response?;
