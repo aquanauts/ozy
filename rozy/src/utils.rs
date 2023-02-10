@@ -32,8 +32,7 @@ pub fn download_to(dest_path: &std::path::PathBuf, url: &str) -> Result<()> {
         response = reqwest::blocking::get(url);
     }
 
-    let response = response?;
-    let mut content = std::io::Cursor::new(response.bytes()?);
+    let mut content = std::io::Cursor::new(response?.bytes()?);
     std::io::copy(&mut content, &mut dest_file)?;
     std::fs::rename(tmp_dest_path, dest_path)?;
     Ok(())
