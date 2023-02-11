@@ -104,7 +104,11 @@ fn install_all() -> Result<()> {
     Ok(())
 }
 
-fn makefile_config_internal(makefile_var: &String, app_names: &[String]) -> Result<String> {
+fn makefile_config_internal(makefile_var: &String, app_names: &[String], did_path_contain_ozy: bool) -> Result<String> {
+    if !did_path_contain_ozy {
+        return Err(anyhow!("The Ozy bin directory must be in the PATH"));
+    }
+
     files::ensure_ozy_dirs()?;
     let config = config::load_config(None)?;
 
@@ -136,11 +140,7 @@ fn makefile_config(
     app_names: &[String],
     did_path_contain_ozy: bool,
 ) -> Result<()> {
-    if !did_path_contain_ozy {
-        return Err(anyhow!("In order to create a Makefile config, please ensure that the Ozy bin dir is in the PATH"));
-    }
-
-    match makefile_config_internal(makefile_var, app_names) {
+    match makefile_config_internal(makefile_var, app_names, did_path_contain_ozy) {
         Ok(str) => {
             println!("{}", str);
         }
