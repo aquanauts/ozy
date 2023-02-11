@@ -1,7 +1,7 @@
 [![CI](https://github.com/aquanauts/ozy/actions/workflows/ci.yaml/badge.svg)](https://github.com/aquanauts/ozy/actions/workflows/ci.yaml)
 # ozy
 
-`ozy` is a Python program that makes it easy for you and your team to share and collaborate using commonly used programs such as `vault`, `nomad`, or `conda` on Linux.
+`ozy` is a program that makes it easy for you and your team to share and collaborate using commonly used programs such as `vault`, `nomad`, or `conda` on Linux.
 
 ## Getting Started
 
@@ -51,7 +51,7 @@ Upgrading nomad from 0.9.3 to 0.9.4
 Upgrading vault from 1.2.2 to 1.2.3
 ```
 
-This will cause ozy to re-fetch your team's ozy config url, and note the updates. 
+This will cause ozy to re-fetch your team's ozy config url, and note the updates.
 ```bash
 $ ozy update --dry-run
 100%|************************| 3.86k/3.86k [00:00<00:00, 17.3MiB/s]
@@ -82,14 +82,14 @@ For example, assuming you are in some directory and `ozy` is in your `PATH`:
 ```bash
 $ echo "apps:
   nomad:
-    version: 0.10.0" > .ozy.yaml 
+    version: 0.10.0" > .ozy.yaml
 $ nomad --version
 Installing nomad 0.10.0
 100%|************************| 33.0M/33.0M [00:08<00:00, 3.85MiB/s]
 Nomad v0.10.0 (25ee121d951939504376c70bf8d7950c1ddb6a82)
 ```
 
-Directories are walked up from the current directory, looking for `~/.ozy.yaml` files. Settings are applied from the combination of all configuration files found, with the most deeply-nested yaml file settings taking precedence. 
+Directories are walked up from the current directory, looking for `~/.ozy.yaml` files. Settings are applied from the combination of all configuration files found, with the most deeply-nested yaml file settings taking precedence.
 
 ### Running a command through ozy
 You can directly run a command through ozy:
@@ -116,14 +116,14 @@ TODO: this
 ```bash
 $ ozy rm nomad
 ```
-The real nomad lives in `~/.cache/ozy/nomad/0.9.4/nomad`. The symlink in `~/.ozy/bin/nomad` points to ozy. `rm` will remove the symlink, which is as good as deleting the executable.  
+The real nomad lives in `~/.cache/ozy/nomad/0.9.4/nomad`. The symlink in `~/.ozy/bin/nomad` points to ozy. `rm` will remove the symlink, which is as good as deleting the executable.
 
 ### Full cleanup
 TODO: this
 ```bash
 $ ozy clean
 ```
-This will remove `~/.cache/ozy`! 
+This will remove `~/.cache/ozy`!
 
 ## Writing your own ozy.yaml
 

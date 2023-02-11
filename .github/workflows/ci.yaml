@@ -1,10 +1,6 @@
 name: Rust CI
 
-on:
-  push:
-    paths:
-      - "rozy/**"
-      - ".github/workflows/ci-rust.yaml"
+on: push
 
 jobs:
   build:
@@ -26,10 +22,10 @@ jobs:
           toolchain: stable
           target: ${{ matrix.target }}
       - name: Format
-        run: cargo fmt --manifest-path rozy/Cargo.toml
+        run: cargo fmt
       - name: Clippy
-        run: cargo clippy --manifest-path rozy/Cargo.toml
+        run: cargo clippy
       - if: ${{ contains(matrix.target, '-musl') }}
         run: sudo apt-get install musl-tools
       - name: Test
-        run: cargo test --target=${{ matrix.target }} --manifest-path rozy/Cargo.toml
+        run: cargo test --target=${{ matrix.target }}

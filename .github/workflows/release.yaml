@@ -30,7 +30,7 @@ jobs:
       - if: ${{ contains(matrix.target, '-musl') }}
         run: sudo apt-get install musl-tools
       - name: Build
-        run: cargo build --release --verbose --target=${{ matrix.target }} --manifest-path rozy/Cargo.toml
+        run: cargo build --release --verbose --target=${{ matrix.target }}
       - name: Ensure version is correct
         run: rozy/target/${{ matrix.target }}/release/ozy --version | grep "$(echo $GITHUB_REF_NAME | cut -c2-)"
       - name: Rename
