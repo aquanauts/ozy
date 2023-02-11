@@ -113,7 +113,6 @@ fn makefile_config_internal(
         return Err(anyhow!("The Ozy bin directory must be in the PATH"));
     }
 
-    files::ensure_ozy_dirs()?;
     let config = config::load_config(None)?;
 
     let ozy_bin_dir = get_ozy_bin_dir()?;
@@ -449,6 +448,7 @@ the relevant symlinks are created in your ozy bin directory.
 }
 
 fn main() -> Result<(), Error> {
+    files::ensure_ozy_dirs()?;
     let ozy_bin_dir = get_ozy_bin_dir()?;
     let did_path_contain_ozy = check_path(&ozy_bin_dir)?;
     if !did_path_contain_ozy {
