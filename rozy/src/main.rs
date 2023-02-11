@@ -107,11 +107,8 @@ fn install_all() -> Result<()> {
 fn makefile_config_internal(makefile_var: &String, app_names: &[String]) -> Result<String> {
     files::ensure_ozy_dirs()?;
     let config = config::load_config(None)?;
-    let ozy_bin_dir = get_ozy_bin_dir()?;
-    if !check_path(&ozy_bin_dir)? {
-        return Err(anyhow!("ozy is not on the path"));
-    }
 
+    let ozy_bin_dir = get_ozy_bin_dir()?;
     for app_name in app_names.iter() {
         if app::App::new(app_name, &config).is_err() {
             return Err(anyhow!("Missing ozy app '{}'", app_name));
@@ -134,7 +131,15 @@ fn makefile_config_internal(makefile_var: &String, app_names: &[String]) -> Resu
     Ok(format!("{}:={}", &makefile_var, ozy_bin_dir.display()))
 }
 
-fn makefile_config(makefile_var: &String, app_names: &[String]) -> Result<()> {
+fn makefile_config(
+    makefile_var: &String,
+    app_names: &[String],
+    did_path_contain_ozy: bool,
+) -> Result<()> {
+    if !did_path_contain_ozy {
+        return Err(anyhow!("In order to create a Makefile config, please ensure that the Ozy bin dir is in the PATH"));
+    }
+
     match makefile_config_internal(makefile_var, app_names) {
         Ok(str) => {
             println!("{}", str);
@@ -151,12 +156,6 @@ fn clean() -> Result<()> {
 }
 
 fn run(app_name: &String, version: &Option<String>, args: &[String]) -> Result<()> {
-    let ozy_bin_dir = get_ozy_bin_dir()?;
-    if !check_path(&ozy_bin_dir)? {
-        let updated_path = format!("{}:{}", ozy_bin_dir.display(), std::env::var("PATH")?);
-        std::env::set_var("PATH", updated_path);
-    }
-
     let app = app::find_app(app_name, version)?;
     app.ensure_installed()
         .with_context(|| format!("While ensuring that app {} is installed", app_name))?;
@@ -336,11 +335,6 @@ fn show_path_warning() -> Result<()> {
 }
 
 fn info() -> Result<()> {
-    let is_path_ok = check_path(&files::get_ozy_bin_dir()?)?;
-    if !is_path_ok {
-        show_path_warning()?;
-    }
-
     let user_config = config::get_ozy_user_conf()?;
     let team_url = match user_config.get("url") {
         Some(v) => v.as_str().unwrap(),
@@ -447,6 +441,9 @@ the relevant symlinks are created in your ozy bin directory.
 }
 
 fn main() -> Result<(), Error> {
+    let ozy_bin_dir = get_ozy_bin_dir()?;
+    let did_path_contain_ozy = check_path(&ozy_bin_dir)?;
+
     let invoked_as = std::env::args()
         .next()
         .as_ref()
@@ -458,6 +455,10 @@ fn main() -> Result<(), Error> {
 
     if invoked_as.starts_with("ozy") {
         let args = Args::parse();
+        if !did_path_contain_ozy {
+            show_path_warning()?;
+        }
+
         let exe_path = std::env::current_exe()?;
         match &args.command {
             Commands::Clean => clean(),
@@ -469,7 +470,7 @@ fn main() -> Result<(), Error> {
             Commands::MakefileConfig {
                 makefile_var,
                 app_names,
-            } => makefile_config(makefile_var, app_names),
+            } => makefile_config(makefile_var, app_names, did_path_contain_ozy),
             Commands::Run {
                 app_name,
                 app_version,
@@ -479,6 +480,11 @@ fn main() -> Result<(), Error> {
             Commands::Sync => sync(&exe_path),
         }
     } else {
+        if !did_path_contain_ozy {
+            let updated_path = format!("{}:{}", ozy_bin_dir.display(), std::env::var("PATH")?);
+            std::env::set_var("PATH", updated_path);
+        }
+
         let args = std::env::args().collect::<Vec<String>>();
         run(&invoked_as, &None, &args[1..])
     }
