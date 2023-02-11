@@ -334,7 +334,11 @@ fn show_path_warning() -> Result<()> {
     Ok(())
 }
 
-fn info() -> Result<()> {
+fn info(did_path_contain_ozy: bool) -> Result<()> {
+    if !did_path_contain_ozy {
+        show_path_warning()?;
+    }
+
     let user_config = config::get_ozy_user_conf()?;
     let team_url = match user_config.get("url") {
         Some(v) => v.as_str().unwrap(),
@@ -459,17 +463,13 @@ fn main() -> Result<(), Error> {
 
     if invoked_as.starts_with("ozy") {
         let args = Args::parse();
-        if !did_path_contain_ozy {
-            show_path_warning()?;
-        }
-
         let exe_path = std::env::current_exe()?;
         match &args.command {
             Commands::Clean => clean(),
             Commands::Init { url } => init(&exe_path, url),
             Commands::Install { app_names } => install(app_names),
             Commands::InstallAll => install_all(),
-            Commands::Info => info(),
+            Commands::Info => info(did_path_contain_ozy),
             Commands::List => list(),
             Commands::MakefileConfig {
                 makefile_var,
