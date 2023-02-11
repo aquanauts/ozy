@@ -104,7 +104,11 @@ fn install_all() -> Result<()> {
     Ok(())
 }
 
-fn makefile_config_internal(makefile_var: &String, app_names: &[String], did_path_contain_ozy: bool) -> Result<String> {
+fn makefile_config_internal(
+    makefile_var: &String,
+    app_names: &[String],
+    did_path_contain_ozy: bool,
+) -> Result<String> {
     if !did_path_contain_ozy {
         return Err(anyhow!("The Ozy bin directory must be in the PATH"));
     }
