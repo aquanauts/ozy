@@ -151,6 +151,12 @@ fn clean() -> Result<()> {
 }
 
 fn run(app_name: &String, version: &Option<String>, args: &[String]) -> Result<()> {
+    let ozy_bin_dir = get_ozy_bin_dir()?;
+    if !check_path(&ozy_bin_dir)? {
+        let updated_path = format!("{}:{}", ozy_bin_dir.display(), std::env::var("PATH")?);
+        std::env::set_var("PATH", updated_path);
+    }
+
     let app = app::find_app(app_name, version)?;
     app.ensure_installed()
         .with_context(|| format!("While ensuring that app {} is installed", app_name))?;
