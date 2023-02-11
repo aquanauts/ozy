@@ -2,7 +2,7 @@ use anyhow::{anyhow, Context, Error, Result};
 use file_lock::{FileLock, FileOptions};
 
 use crate::config::{apply_overrides, load_config, resolve};
-use crate::files::{delete_if_exists, get_ozy_cache_dir};
+use crate::files::{check_path, delete_if_exists, get_ozy_bin_dir, get_ozy_cache_dir};
 use crate::installers::conda::Conda;
 use crate::installers::file::File;
 use crate::installers::installer::Installer;
@@ -137,6 +137,12 @@ impl App {
     fn ensure_installed_internal(&self) -> Result<()> {
         if self.is_installed().context("Checking if it's installed")? {
             return Ok(());
+        }
+
+        let ozy_bin_dir = get_ozy_bin_dir()?;
+        if !check_path(&ozy_bin_dir)? {
+            let updated_path = format!("{}:{}", ozy_bin_dir.display(), std::env::var("PATH")?);
+            std::env::set_var("PATH", updated_path);
         }
 
         let install_dir = self.get_install_path()?;

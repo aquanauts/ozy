@@ -17,29 +17,6 @@ pub struct Tarball {
     url: String,
 }
 
-enum CompressedFileType {
-    BZIP2,
-    GZIP2,
-    XZ,
-}
-
-fn get_compressed_file_type(path: &std::path::Path) -> Result<CompressedFileType> {
-    let mut command = std::process::Command::new("file");
-    command.arg(path);
-    let output = command.output().unwrap();
-
-    let stdout = std::str::from_utf8(&output.stdout)?;
-    if stdout.contains("bzip2") {
-        return Ok(CompressedFileType::BZIP2);
-    } else if stdout.contains("gzip") {
-        return Ok(CompressedFileType::GZIP2);
-    } else if stdout.contains("XZ") {
-        return Ok(CompressedFileType::XZ);
-    }
-
-    Err(anyhow!("Unknown data type"))
-}
-
 impl Tarball {
     pub fn new(
         name: &String,
@@ -70,10 +47,14 @@ impl Installer for Tarball {
         download_to(&file.path().to_path_buf(), &self.url)?;
 
         let downloaded_file = std::fs::File::open(file.path())?;
-        let reader: Box<dyn Read> = match get_compressed_file_type(file.path())? {
-            CompressedFileType::GZIP2 => Box::new(GzDecoder::new(downloaded_file)),
-            CompressedFileType::BZIP2 => Box::new(BzDecoder::new(downloaded_file)),
-            CompressedFileType::XZ => Box::new(XzDecoder::new(downloaded_file)),
+        let reader: Box<dyn Read> = match infer::get_from_path(file.path())? {
+            Some(t) => match t.extension() {
+                "gz" => Box::new(GzDecoder::new(downloaded_file)),
+                "bz2" => Box::new(BzDecoder::new(downloaded_file)),
+                "xz" => Box::new(XzDecoder::new(downloaded_file)),
+                _ => return Err(anyhow!("unsupported archive compression type {}", t)),
+            },
+            _ => return Err(anyhow!("unable to determine archive compression type")),
         };
 
         let mut archive = Archive::new(reader);
