@@ -443,6 +443,10 @@ the relevant symlinks are created in your ozy bin directory.
 fn main() -> Result<(), Error> {
     let ozy_bin_dir = get_ozy_bin_dir()?;
     let did_path_contain_ozy = check_path(&ozy_bin_dir)?;
+    if !did_path_contain_ozy {
+        let updated_path = format!("{}:{}", ozy_bin_dir.display(), std::env::var("PATH")?);
+        std::env::set_var("PATH", updated_path);
+    }
 
     let invoked_as = std::env::args()
         .next()
@@ -480,11 +484,6 @@ fn main() -> Result<(), Error> {
             Commands::Sync => sync(&exe_path),
         }
     } else {
-        if !did_path_contain_ozy {
-            let updated_path = format!("{}:{}", ozy_bin_dir.display(), std::env::var("PATH")?);
-            std::env::set_var("PATH", updated_path);
-        }
-
         let args = std::env::args().collect::<Vec<String>>();
         run(&invoked_as, &None, &args[1..])
     }
