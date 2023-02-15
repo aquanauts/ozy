@@ -1,7 +1,7 @@
 [![CI](https://github.com/aquanauts/ozy/actions/workflows/ci.yaml/badge.svg)](https://github.com/aquanauts/ozy/actions/workflows/ci.yaml)
 # ozy
 
-`ozy` is a Python program that makes it easy for you and your team to share and collaborate using commonly used programs such as `vault`, `nomad`, or `conda` on Linux.
+`ozy` is a Rust program that makes it easy for you and your team to share and collaborate using commonly used programs such as `vault`, `nomad`, or `conda` on Linux.
 
 ## Getting Started
 
