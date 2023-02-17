@@ -104,14 +104,18 @@ fn install_all() -> Result<()> {
     Ok(())
 }
 
-fn makefile_config_internal(makefile_var: &String, app_names: &[String]) -> Result<String> {
-    files::ensure_ozy_dirs()?;
-    let config = config::load_config(None)?;
-    let ozy_bin_dir = get_ozy_bin_dir()?;
-    if !check_path(&ozy_bin_dir)? {
-        return Err(anyhow!("ozy is not on the path"));
+fn makefile_config_internal(
+    makefile_var: &String,
+    app_names: &[String],
+    did_path_contain_ozy: bool,
+) -> Result<String> {
+    if !did_path_contain_ozy {
+        return Err(anyhow!("The Ozy bin directory must be in the PATH"));
     }
 
+    let config = config::load_config(None)?;
+
+    let ozy_bin_dir = get_ozy_bin_dir()?;
     for app_name in app_names.iter() {
         if app::App::new(app_name, &config).is_err() {
             return Err(anyhow!("Missing ozy app '{}'", app_name));
@@ -134,8 +138,12 @@ fn makefile_config_internal(makefile_var: &String, app_names: &[String]) -> Resu
     Ok(format!("{}:={}", &makefile_var, ozy_bin_dir.display()))
 }
 
-fn makefile_config(makefile_var: &String, app_names: &[String]) -> Result<()> {
-    match makefile_config_internal(makefile_var, app_names) {
+fn makefile_config(
+    makefile_var: &String,
+    app_names: &[String],
+    did_path_contain_ozy: bool,
+) -> Result<()> {
+    match makefile_config_internal(makefile_var, app_names, did_path_contain_ozy) {
         Ok(str) => {
             println!("{}", str);
         }
@@ -329,9 +337,8 @@ fn show_path_warning() -> Result<()> {
     Ok(())
 }
 
-fn info() -> Result<()> {
-    let is_path_ok = check_path(&files::get_ozy_bin_dir()?)?;
-    if !is_path_ok {
+fn info(did_path_contain_ozy: bool) -> Result<()> {
+    if !did_path_contain_ozy {
         show_path_warning()?;
     }
 
@@ -441,6 +448,14 @@ the relevant symlinks are created in your ozy bin directory.
 }
 
 fn main() -> Result<(), Error> {
+    files::ensure_ozy_dirs()?;
+    let ozy_bin_dir = get_ozy_bin_dir()?;
+    let did_path_contain_ozy = check_path(&ozy_bin_dir)?;
+    if !did_path_contain_ozy {
+        let updated_path = format!("{}:{}", ozy_bin_dir.display(), std::env::var("PATH")?);
+        std::env::set_var("PATH", updated_path);
+    }
+
     let invoked_as = std::env::args()
         .next()
         .as_ref()
@@ -458,12 +473,12 @@ fn main() -> Result<(), Error> {
             Commands::Init { url } => init(&exe_path, url),
             Commands::Install { app_names } => install(app_names),
             Commands::InstallAll => install_all(),
-            Commands::Info => info(),
+            Commands::Info => info(did_path_contain_ozy),
             Commands::List => list(),
             Commands::MakefileConfig {
                 makefile_var,
                 app_names,
-            } => makefile_config(makefile_var, app_names),
+            } => makefile_config(makefile_var, app_names, did_path_contain_ozy),
             Commands::Run {
                 app_name,
                 app_version,
