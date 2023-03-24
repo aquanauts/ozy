@@ -1,4 +1,4 @@
-use std::path;
+use std::{path, time::Duration};
 
 use anyhow::{anyhow, Context, Error, Result};
 use clap::{Parser, Subcommand};
@@ -20,7 +20,6 @@ fn symlink_binaries(path_to_ozy: &std::path::PathBuf, config: &serde_yaml::Mappi
     // If this binary isn't installed in the correct location, move it there
     let expected_path_to_ozy = files::get_ozy_bin_dir()?.join("ozy");
     if path_to_ozy != &expected_path_to_ozy {
-        files::delete_if_exists(&expected_path_to_ozy)?;
         std::fs::rename(path_to_ozy, expected_path_to_ozy)?;
     }
 
@@ -158,8 +157,24 @@ fn clean() -> Result<()> {
     files::delete_ozy_dirs()
 }
 
-fn run(app_name: &String, version: &Option<String>, args: &[String]) -> Result<()> {
-    let app = app::find_app(app_name, version)?;
+fn should_update(config: &serde_yaml::Mapping) -> Result<bool> {
+    return Ok(match config["ozy_update_every"].as_u64() {
+        Some(v) => {
+            let since_last_update = std::time::SystemTime::now().duration_since(config::config_mtime().context("While determining config mtime")?)?;
+            since_last_update >= Duration::from_secs(v)
+        },
+        None => false,
+    })
+}
+
+fn run(app_name: &String, args: &[String]) -> Result<()> {
+    let mut config = config::load_config(None).context("While loading ozy config")?;
+    if should_update(&config)? {
+        update(&std::env::current_exe()?, &None).unwrap();
+        config = config::load_config(None).context("While reloading ozy config")?;
+    }
+
+    let app = app::find_app(&config, app_name)?;
     app.ensure_installed()
         .with_context(|| format!("While ensuring that app {} is installed", app_name))?;
 
@@ -226,7 +241,6 @@ fn update(path_to_ozy: &std::path::PathBuf, url: &Option<String>) -> Result<()> 
 
     utils::download_to(&new_base_ozy_conf, url)?;
 
-    let old_config = config::load_config(None)?;
     let new_config = config::load_config(Some("ozy.yaml.tmp"))?;
 
     let new_version = Version::parse(new_config["ozy_version"].as_str().unwrap())?;
@@ -256,31 +270,12 @@ fn update(path_to_ozy: &std::path::PathBuf, url: &Option<String>) -> Result<()> 
         perms.set_mode(0o755);
         std::fs::set_permissions(&dest_path, perms)?;
 
-        let mut command = exec::Command::new(&dest_path);
-        command.arg("update");
-
-        // We use exec to replace this process with the child entirely. The only time exec() returns is
-        // if there was an error.
-        let err = command.exec();
+        let err = exec::execvp(&dest_path, std::env::args().collect::<Vec<String>>());
         return Err(anyhow!(
             "Failed to execute process {} ({})",
             dest_path.display(),
             err
         ));
-    }
-
-    let new_apps =
-        std::collections::HashSet::<app::App>::from_iter(get_apps(&new_config)?.into_iter());
-    let old_apps =
-        std::collections::HashSet::<app::App>::from_iter(get_apps(&old_config)?.into_iter());
-
-    let to_delete = old_apps.difference(&new_apps);
-
-    for app in to_delete {
-        eprintln!("Removing obsolete app {} v.{}", app.name, app.version);
-
-        app.delete()?;
-        files::delete_if_exists(&files::get_ozy_bin_dir()?.join(&app.name))?;
     }
 
     std::fs::rename(new_base_ozy_conf, old_base_ozy_conf)?;
@@ -424,10 +419,6 @@ install:
     #[clap(trailing_var_arg = true, about = "Runs the given application")]
     Run {
         app_name: String,
-
-        #[arg(short, long, help = "Version of the app to run")]
-        app_version: Option<String>,
-
         app_args: Vec<String>,
     },
 
@@ -481,14 +472,13 @@ fn main() -> Result<(), Error> {
             } => makefile_config(makefile_var, app_names, did_path_contain_ozy),
             Commands::Run {
                 app_name,
-                app_version,
                 app_args,
-            } => run(app_name, app_version, app_args),
+            } => run(app_name, app_args),
             Commands::Update { url } => update(&exe_path, url),
             Commands::Sync => sync(&exe_path),
         }
     } else {
         let args = std::env::args().collect::<Vec<String>>();
-        run(&invoked_as, &None, &args[1..])
+        run(&invoked_as, &args[1..])
     }
 }
