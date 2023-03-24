@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Error, Result};
 use file_lock::{FileLock, FileOptions};
 
-use crate::config::{apply_overrides, load_config, resolve};
+use crate::config::{apply_overrides, resolve};
 use crate::files::{delete_if_exists, get_ozy_cache_dir};
 use crate::installers::conda::Conda;
 use crate::installers::file::File;
@@ -30,12 +30,7 @@ pub struct App {
     executable_path: String,
 }
 
-pub fn find_app(app: &String, version: &Option<String>) -> Result<App> {
-    if version.is_some() {
-        return Err(anyhow!("find_app w/ version not implemented"));
-    }
-
-    let config = load_config(None).context("While loading ozy config")?;
+pub fn find_app(config: &serde_yaml::Mapping, app: &String) -> Result<App> {
     App::new(app, &config)
         .with_context(|| format!("While attempting to find the app {} to run", app))
 }
@@ -128,10 +123,6 @@ impl App {
         }
 
         result
-    }
-
-    pub fn delete(&self) -> Result<()> {
-        delete_if_exists(self.get_install_path()?.as_path())
     }
 
     fn ensure_installed_internal(&self) -> Result<()> {

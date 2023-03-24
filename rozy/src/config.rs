@@ -1,8 +1,12 @@
 use crate::files::get_ozy_dir;
 use anyhow::{Context, Result};
-use std::collections::HashMap;
+use std::{collections::HashMap, time::SystemTime};
 
 use serde_yaml::Mapping as Config;
+
+pub fn config_mtime() -> Result<SystemTime> {
+    return Ok(std::fs::metadata(&get_ozy_dir()?.join("ozy.yaml"))?.modified().unwrap());
+}
 
 pub fn load_config(base_config_filename_override: Option<&str>) -> Result<Config> {
     let mut curr_config = parse_ozy_config(
