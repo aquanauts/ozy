@@ -158,13 +158,14 @@ fn clean() -> Result<()> {
 }
 
 fn should_update(config: &serde_yaml::Mapping) -> Result<bool> {
-    return Ok(match config["ozy_update_every"].as_u64() {
-        Some(v) => {
+    match config.get("ozy_update_every") {
+        Some(serde_yaml::Value::Number(update_every)) => {
+            let update_every = Duration::from_secs(update_every.as_u64().unwrap_or_default());
             let since_last_update = std::time::SystemTime::now().duration_since(config::config_mtime().context("While determining config mtime")?)?;
-            since_last_update >= Duration::from_secs(v)
+            return Ok(!update_every.is_zero() && since_last_update >= update_every);
         },
-        None => false,
-    })
+        _ => return Ok(false),
+    }
 }
 
 fn run(app_name: &String, args: &[String]) -> Result<()> {
