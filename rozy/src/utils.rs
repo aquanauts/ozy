@@ -19,7 +19,7 @@ pub fn download_to(dest_path: &std::path::PathBuf, url: &str) -> Result<()> {
 
     let mut num_tries = 5;
     let mut wait_duration = std::time::Duration::from_millis(200);
-    let mut response = reqwest::blocking::get(url);
+    let mut response = reqwest::blocking::get(url).and_then(|resp| resp.bytes());
     while let Err(err) = &response {
         if num_tries < 0 || !is_request_retryable_based_on_error(err) {
             break;
@@ -29,10 +29,10 @@ pub fn download_to(dest_path: &std::path::PathBuf, url: &str) -> Result<()> {
         wait_duration *= 2;
         num_tries -= 1;
 
-        response = reqwest::blocking::get(url);
+        response = reqwest::blocking::get(url).and_then(|resp| resp.bytes());
     }
 
-    let mut content = std::io::Cursor::new(response?.bytes()?);
+    let mut content = std::io::Cursor::new(response?);
     std::io::copy(&mut content, &mut dest_file)?;
     std::fs::rename(tmp_dest_path, dest_path)?;
     Ok(())
