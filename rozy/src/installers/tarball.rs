@@ -54,7 +54,12 @@ impl Installer for Tarball {
                 "xz" => Box::new(XzDecoder::new(downloaded_file)),
                 _ => return Err(anyhow!("unsupported archive compression type {}", t)),
             },
-            _ => return Err(anyhow!("unable to determine archive compression type")),
+            _ => {
+                return Err(anyhow!(
+                    "unable to determine archive compression type from file: {}",
+                    file.path().display()
+                ))
+            }
         };
 
         let mut archive = Archive::new(reader);
