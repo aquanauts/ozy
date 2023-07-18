@@ -31,7 +31,7 @@ pub struct App {
 }
 
 pub fn find_app(config: &serde_yaml::Mapping, app: &String) -> Result<App> {
-    App::new(app, &config)
+    App::new(app, config)
         .with_context(|| format!("While attempting to find the app {} to run", app))
 }
 

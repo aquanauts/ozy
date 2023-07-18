@@ -164,9 +164,9 @@ fn should_update(config: &serde_yaml::Mapping) -> Result<bool> {
             let since_last_update = std::time::SystemTime::now().duration_since(
                 config::config_mtime().context("While determining config mtime")?,
             )?;
-            return Ok(!update_every.is_zero() && since_last_update >= update_every);
+            Ok(!update_every.is_zero() && since_last_update >= update_every)
         }
-        _ => return Ok(false),
+        _ => Ok(false),
     }
 }
 

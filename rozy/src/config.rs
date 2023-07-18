@@ -5,9 +5,9 @@ use std::{collections::HashMap, time::SystemTime};
 use serde_yaml::Mapping as Config;
 
 pub fn config_mtime() -> Result<SystemTime> {
-    return Ok(std::fs::metadata(&get_ozy_dir()?.join("ozy.yaml"))?
+    Ok(std::fs::metadata(&get_ozy_dir()?.join("ozy.yaml"))?
         .modified()
-        .unwrap());
+        .unwrap())
 }
 
 pub fn load_config(base_config_filename_override: Option<&str>) -> Result<Config> {
