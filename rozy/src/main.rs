@@ -161,10 +161,12 @@ fn should_update(config: &serde_yaml::Mapping) -> Result<bool> {
     match config.get("ozy_update_every") {
         Some(serde_yaml::Value::Number(update_every)) => {
             let update_every = Duration::from_secs(update_every.as_u64().unwrap_or_default());
-            let since_last_update = std::time::SystemTime::now().duration_since(config::config_mtime().context("While determining config mtime")?)?;
-            return Ok(!update_every.is_zero() && since_last_update >= update_every);
-        },
-        _ => return Ok(false),
+            let since_last_update = std::time::SystemTime::now().duration_since(
+                config::config_mtime().context("While determining config mtime")?,
+            )?;
+            Ok(!update_every.is_zero() && since_last_update >= update_every)
+        }
+        _ => Ok(false),
     }
 }
 
@@ -471,10 +473,7 @@ fn main() -> Result<(), Error> {
                 makefile_var,
                 app_names,
             } => makefile_config(makefile_var, app_names, did_path_contain_ozy),
-            Commands::Run {
-                app_name,
-                app_args,
-            } => run(app_name, app_args),
+            Commands::Run { app_name, app_args } => run(app_name, app_args),
             Commands::Update { url } => update(&exe_path, url),
             Commands::Sync => sync(&exe_path),
         }
