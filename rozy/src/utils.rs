@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 
 fn is_request_retryable_based_on_error(err: &reqwest::Error) -> bool {
     if err.is_timeout() || err.is_connect() {
@@ -17,23 +17,53 @@ pub fn download_to(dest_path: &std::path::PathBuf, url: &str) -> Result<()> {
     let tmp_dest_path = dest_path.clone().with_extension("tmp");
     let mut dest_file = std::fs::File::create(&tmp_dest_path)?;
 
-    let mut num_tries = 5;
-    let mut wait_duration = std::time::Duration::from_millis(200);
-    let mut response = reqwest::blocking::get(url);
-    while let Err(err) = &response {
-        if num_tries < 0 || !is_request_retryable_based_on_error(err) {
+    // The final attempt will wait 12 seconds before proceeding
+    let num_tries = 8;
+    let wait_duration = std::time::Duration::from_millis(200);
+
+    for attempt_num in 0..num_tries {
+        if attempt_num > 0 {
+            let this_wait_duration = wait_duration * 2_u32.pow(attempt_num - 1);
+            eprintln!(
+                "Retrying, attempt #{} after sleeping for {}ms",
+                attempt_num,
+                this_wait_duration.as_millis()
+            );
+            std::thread::sleep(this_wait_duration);
+        }
+
+        let response = reqwest::blocking::get(url);
+        if let Err(err) = &response {
+            eprintln!("Error while making GET request: {}", err);
+            if is_request_retryable_based_on_error(err) {
+                continue;
+            }
             break;
         }
 
-        std::thread::sleep(wait_duration);
-        wait_duration *= 2;
-        num_tries -= 1;
+        let response = response?;
+        if let Err(err) = &response.error_for_status_ref() {
+            eprintln!("GET request failed: {}", err);
+            if is_request_retryable_based_on_error(err) {
+                continue;
+            }
+            break;
+        }
 
-        response = reqwest::blocking::get(url);
+        let content = response.bytes();
+        if let Err(err) = &content {
+            eprintln!("Error while making streaming response: {}", err);
+            if is_request_retryable_based_on_error(err) {
+                continue;
+            }
+            break;
+        }
+
+        let mut cursor = std::io::Cursor::new(content?);
+        std::io::copy(&mut cursor, &mut dest_file)?;
+        std::fs::rename(tmp_dest_path, dest_path)?;
+        return Ok(());
     }
 
-    let mut content = std::io::Cursor::new(response?.bytes()?);
-    std::io::copy(&mut content, &mut dest_file)?;
-    std::fs::rename(tmp_dest_path, dest_path)?;
-    Ok(())
+    Err(anyhow!("Failed to download {}", url))
 }
