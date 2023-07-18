@@ -10,6 +10,13 @@ fn is_request_retryable_based_on_error(err: &reqwest::Error) -> bool {
         return false;
     }
 
+    if let Some(code) = err.status() {
+        return match code.as_u16() {
+            408 | 425 | 429 | 500 | 502 | 503 | 504 => true, // https://stackoverflow.com/a/74627395/21956251
+            _ => false,
+        };
+    }
+
     true
 }
 
