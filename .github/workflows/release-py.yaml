@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-18.04
+          - os: ubuntu-22.04
             asset: ozy-Linux-x86_64
           - os: macos-12
             asset: ozy-Darwin-x86_64
@@ -38,7 +38,7 @@ jobs:
 
   upload:
     needs: [ build ]
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v2
