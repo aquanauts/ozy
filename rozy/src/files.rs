@@ -1,6 +1,7 @@
 use std::env;
 
 use anyhow::{Context, Error, Result};
+use file_lock::{FileLock, FileOptions};
 
 fn get_home_dir() -> Result<std::path::PathBuf, Error> {
     let home_dir = std::env::var("HOME").context("While checking $HOME")?;
@@ -77,4 +78,11 @@ pub fn softlink(from_command: &str, to_command: &str) -> Result<bool> {
         )
     })?;
     Ok(was_there)
+}
+
+pub fn lock_ozy_dir() -> Result<FileLock> {
+    let lock_for_writing = FileOptions::new().create(true).write(true).read(true);
+    let lock_path = get_ozy_dir()?.join("ozy.lock");
+    let lock = FileLock::lock(lock_path, true, lock_for_writing).context("Locking ozy config")?;
+    Ok(lock)
 }
