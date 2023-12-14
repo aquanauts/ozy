@@ -233,6 +233,7 @@ fn get_apps(config: &serde_yaml::Mapping) -> Result<Vec<app::App>> {
 
 fn update(path_to_ozy: &std::path::PathBuf, url: &Option<String>) -> Result<()> {
     files::ensure_ozy_dirs()?;
+    let _lock = files::lock_ozy_dir()?;
     let old_base_ozy_conf = files::get_ozy_dir()?.join("ozy.yaml");
     let new_base_ozy_conf = files::get_ozy_dir()?.join("ozy.yaml.tmp");
 
