@@ -4,6 +4,7 @@ use anyhow::{anyhow, Context, Error, Result};
 use clap::{Parser, Subcommand};
 use semver::Version;
 use std::os::unix::fs::PermissionsExt;
+use uuid::Uuid;
 use which::which;
 
 use crate::files::{check_path, get_ozy_bin_dir};
@@ -267,7 +268,7 @@ fn update(path_to_ozy: &std::path::PathBuf, url: &Option<String>) -> Result<()> 
         let download_url = config_update_slice["ozy_download"].as_str().unwrap();
         eprintln!("Downloading from {}", download_url);
 
-        let dest_path = files::get_ozy_bin_dir()?.join("ozy.tmp");
+        let dest_path = files::get_ozy_bin_dir()?.join(format!("ozy.tmp.{}", Uuid::new_v4()));
         files::delete_if_exists(&dest_path)?;
         utils::download_to(&dest_path, download_url)?;
         let mut perms = std::fs::metadata(&dest_path)?.permissions();
