@@ -4,7 +4,7 @@ ozy_version: 0.1.4
 ozy_download: https://github.com/aquanauts/ozy/releases/download/v{version}/ozy-{ozy_os}-{ozy_machine}
 templates:
   hashicorp:
-    type: single_binary_zip
+    type: zip
     url: https://releases.hashicorp.com/{app_name}/{version}/{app_name}_{version}_{ozy_os}_{ozy_arch}.zip
     sha256: https://releases.hashicorp.com/{app_name}/{version}/{app_name}_{version}_SHA256SUMS
     sha256_signature: https://releases.hashicorp.com/{app_name}/{version}/{app_name}_{app_name}_SHA256SUMS.sig
