@@ -6,6 +6,7 @@ pub struct Pip {
     package: String,
     version: String,
     channels: Vec<String>,
+    env: Vec<(String, String)>,
 }
 
 impl Pip {
@@ -20,10 +21,24 @@ impl Pip {
             _ => vec![],
         };
 
+        let env = match app_config.get("env") {
+            Some(serde_yaml::Value::Mapping(env_map)) => env_map
+                .iter()
+                .map(|(a, b)| {
+                    (
+                        a.as_str().unwrap().to_owned(),
+                        b.as_str().unwrap().to_owned(),
+                    )
+                })
+                .collect(),
+            _ => vec![],
+        };
+
         Ok(Pip {
             package,
             version: version.to_string(),
             channels,
+            env,
         })
     }
 }
@@ -38,6 +53,7 @@ impl Installer for Pip {
             &self.channels,
             to_dir,
             &[String::from("pip")],
+            &self.env,
         )?;
 
         let pip_command = to_dir.join("bin").join("pip");

@@ -45,6 +45,8 @@ apps:
     channels:
       - channel_a
       - channel_b
+    env:
+      MY_ENV_VAR: value
   file_app:
     version: 6.6.0
     type: single_file
