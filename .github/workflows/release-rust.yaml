@@ -35,7 +35,7 @@ jobs:
         run: rozy/target/${{ matrix.target }}/release/ozy --version | grep "$(echo $GITHUB_REF_NAME | cut -c2-)"
       - name: Rename
         run: mv rozy/target/${{ matrix.target }}/release/ozy rozy/target/${{ matrix.target }}/release/${{ matrix.asset }}
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.asset }}
           path: rozy/target/${{ matrix.target }}/release/${{ matrix.asset }}
@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Download all workflow run artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
       - name: Upload binaries to release
         uses: marvinpinto/action-automatic-releases@latest
         with:
