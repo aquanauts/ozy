@@ -10,6 +10,7 @@ pub struct Conda {
     channels: Vec<String>,
     conda_bin: String,
     pyinstaller: bool,
+    env: Vec<(String, String)>,
 }
 
 pub fn conda_install(
@@ -17,6 +18,7 @@ pub fn conda_install(
     channels: &[String],
     to_dir: &std::path::Path,
     to_install: &[String],
+    extra_env: &[(String, String)],
 ) -> Result<()> {
     if let Some(parent) = to_dir.parent() {
         std::fs::create_dir_all(parent)?;
@@ -26,7 +28,10 @@ pub fn conda_install(
     delete_if_exists(to_dir)?;
 
     let conda_cache_dir = tempdir()?;
-    let env = vec![("CONDA_PKGS_DIRS", conda_cache_dir.path().to_str().unwrap())];
+    let mut env = vec![("CONDA_PKGS_DIRS", conda_cache_dir.path().to_str().unwrap())];
+    for pair in extra_env {
+        env.push((pair.0.as_str(), pair.1.as_str()));
+    }
 
     let mut args = vec!["create", "-y", "-p", to_dir.to_str().unwrap()];
     for arg in channels.iter() {
@@ -68,12 +73,26 @@ impl Conda {
             _ => false,
         };
 
+        let env = match app_config.get("env") {
+            Some(serde_yaml::Value::Mapping(env_map)) => env_map
+                .iter()
+                .map(|(a, b)| {
+                    (
+                        a.as_str().unwrap().to_owned(),
+                        b.as_str().unwrap().to_owned(),
+                    )
+                })
+                .collect(),
+            _ => vec![],
+        };
+
         Ok(Conda {
             package,
             version: version.to_string(),
             channels,
             conda_bin,
             pyinstaller,
+            env,
         })
     }
 }
@@ -91,6 +110,7 @@ impl Installer for Conda {
             &self.channels,
             to_dir,
             &[versioned_package],
+            &self.env,
         )?;
         Ok(())
     }
