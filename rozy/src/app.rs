@@ -334,10 +334,10 @@ mod tests {
     #[test]
     fn symlink_test() {
         let config = get_test_config();
-        let file_app = App::new(&"symilnk_app".to_string(), &config).expect("Failed to construct App");
+        let file_app = App::new(&"symlink_app".to_string(), &config).expect("Failed to construct App");
         assert_eq!(
             file_app.installer.describe(),
-            "symlink installer for file_app v.5.6.7"
+            "symlink installer for symlink_app v.5.6.7"
         );
     }
 }
