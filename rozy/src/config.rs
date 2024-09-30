@@ -19,7 +19,7 @@ pub fn load_config(base_config_filename_override: Option<&str>) -> Result<Config
     let ancestors: Vec<&std::path::Path> = curr_dir.ancestors().collect();
     for dir in ancestors.iter().rev() {
         let ozy_config_path = dir.join(".ozy.yaml");
-        if !ozy_config_path.exists() {
+        if !ozy_config_path.is_file() {
             continue;
         }
 
