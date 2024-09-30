@@ -65,3 +65,9 @@ apps:
     version: 1.10.1
     type: single_binary_zip
     url: some_url_1
+  symlink_app:
+    version: 5.6.7
+    type: symlink
+    path: /nfs/some/symlink_app/{version}
+    package: pip_package
+    executable_path: bin/symlink_app

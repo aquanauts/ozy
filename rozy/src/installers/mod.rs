@@ -4,5 +4,6 @@ pub mod installer;
 pub mod pip;
 pub mod shell;
 pub mod single_binary_zip;
+pub mod symlink;
 pub mod tarball;
 pub mod zip;
