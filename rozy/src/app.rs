@@ -11,6 +11,7 @@ use crate::installers::shell::Shell;
 use crate::installers::single_binary_zip::SingleBinaryZip;
 use crate::installers::tarball::Tarball;
 use crate::installers::zip::Zip;
+use crate::installers::symlink::Symlink;
 
 pub enum AppType {
     SingleBinaryZip,
@@ -20,6 +21,7 @@ pub enum AppType {
     Conda,
     Pip,
     Zip,
+    Symlink
 }
 
 pub struct App {
@@ -78,6 +80,7 @@ impl App {
                 "pip" => AppType::Pip,
                 "conda" => AppType::Conda,
                 "zip" => AppType::Zip,
+                "symlink" => AppType::Symlink,
                 _ => {
                     return Err(anyhow!("App type {} not yet supported", &app_type[..]));
                 }
@@ -100,6 +103,7 @@ impl App {
             AppType::File => Box::new(File::new(name, &version, &app_config)?),
             AppType::Conda => Box::new(Conda::new(name, &version, &app_config)?),
             AppType::Pip => Box::new(Pip::new(name, &version, &app_config)?),
+            AppType::Symlink => Box::new(Symlink::new(name, &version, &app_config)?),
         };
 
         let executable_path = match app_config.get("executable_path") {
@@ -325,6 +329,15 @@ mod tests {
         assert_eq!(
             file_app.installer.describe(),
             "file installer for file_app v.6.6.0"
+        );
+    }
+    #[test]
+    fn symlink_test() {
+        let config = get_test_config();
+        let file_app = App::new(&"symlink_app".to_string(), &config).expect("Failed to construct App");
+        assert_eq!(
+            file_app.installer.describe(),
+            "symlink installer for symlink_app v.5.6.7"
         );
     }
 }
