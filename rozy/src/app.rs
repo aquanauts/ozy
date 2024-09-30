@@ -248,7 +248,7 @@ mod tests {
             .expect("Failed to construct App");
         assert_eq!(app.name, "single_binary_zip_app");
         assert_eq!(app.version, "1.10.1");
-        assert_eq!(app.relocatable, true);
+        assert!(app.relocatable);
         assert_eq!(app.executable_path, "bin/single_binary_zip_app");
     }
 
@@ -257,15 +257,15 @@ mod tests {
         let config = get_test_config();
         let app = App::new(&"explicitly_relocatable_app".to_string(), &config)
             .expect("Failed to construct App");
-        assert_eq!(app.relocatable, true);
+        assert!(app.relocatable);
 
         let app = App::new(&"explicitly_nonrelocatable_app".to_string(), &config)
             .expect("Failed to construct App");
-        assert_eq!(app.relocatable, false);
+        assert!(!app.relocatable);
 
         let app = App::new(&"unspecified_relocatability_app".to_string(), &config)
             .expect("Failed to construct App");
-        assert_eq!(app.relocatable, true);
+        assert!(app.relocatable);
     }
 
     #[test]
