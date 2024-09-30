@@ -5,7 +5,7 @@ use std::{collections::HashMap, time::SystemTime};
 use serde_yaml::Mapping as Config;
 
 pub fn config_mtime() -> Result<SystemTime> {
-    Ok(std::fs::metadata(&get_ozy_dir()?.join("ozy.yaml"))?
+    Ok(std::fs::metadata(get_ozy_dir()?.join("ozy.yaml"))?
         .modified()
         .unwrap())
 }
