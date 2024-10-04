@@ -143,6 +143,7 @@ Performance is really only a consideration on the common case of running a ozy-m
 To make a release of ozy:
 
 * Ensure the `RELEASE_NOTES.md` are updated (not required)
+* Update the version in `Cargo.toml`
 * Push the changes to GitHub
 * Create a tag of the form `v1.2.3` and push it to GitHub
 * GH actions will make the binaries automatically
