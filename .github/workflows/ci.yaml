@@ -12,15 +12,12 @@ jobs:
             runs-on: ubuntu-22.04
           - target: x86_64-apple-darwin
             asset: ozy-Darwin-x86_64
-            runs-on: macos-12
+            runs-on: macos-13
 
     runs-on: ${{ matrix.runs-on }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: ${{ matrix.target }}
+      - uses: actions/checkout@v4
+      - run: rustup target add ${{ matrix.target }}
       - name: Format
         run: cargo fmt
       - name: Clippy
