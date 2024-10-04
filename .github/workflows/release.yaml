@@ -1,9 +1,6 @@
 name: Create Rust release
 
-on:
-  push:
-    tags:
-      - 'v0.1.*'
+on: push
 
 env:
   CARGO_TERM_COLOR: always
@@ -32,13 +29,13 @@ jobs:
       - name: Build
         run: cargo build --release --verbose --target=${{ matrix.target }}
       - name: Ensure version is correct
-        run: rozy/target/${{ matrix.target }}/release/ozy --version | grep "$(echo $GITHUB_REF_NAME | cut -c2-)"
+        run: target/${{ matrix.target }}/release/ozy --version | grep "$(echo $GITHUB_REF_NAME | cut -c2-)"
       - name: Rename
-        run: mv rozy/target/${{ matrix.target }}/release/ozy rozy/target/${{ matrix.target }}/release/${{ matrix.asset }}
+        run: mv target/${{ matrix.target }}/release/ozy target/${{ matrix.target }}/release/${{ matrix.asset }}
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.asset }}
-          path: rozy/target/${{ matrix.target }}/release/${{ matrix.asset }}
+          path: target/${{ matrix.target }}/release/${{ matrix.asset }}
 
   upload:
     needs: [ build ]
