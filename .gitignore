@@ -137,3 +137,7 @@ dmypy.json
 
 # VSCode 
 .vscode/
+
+# ust
+/target
+/test_resource/integration/.*

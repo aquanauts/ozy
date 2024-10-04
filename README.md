@@ -129,12 +129,21 @@ This will remove `~/.cache/ozy`!
 
 TODO
 
+## Developing locally
+
+`ozy` is written in Rust. A quick start:
+1. Install [`rustup`](https://rustup.rs/)
+2. Run `install.sh`
+3. Prepend `$HOME/.ozy/bin` to your path to have access to managed apps
+
+Performance is really only a consideration on the common case of running a ozy-managed binary. This is why we prefer not to introduce asynchrony or even template caching in the `install-all` path.
+
 ## Making a release
 
 To make a release of ozy:
 
-* Update the `__version__` in `ozy/__init__.py`
-* Ensure the `RELEASE_NOTES.md` are updated
+* Ensure the `RELEASE_NOTES.md` are updated (not required)
+* Update the version in `Cargo.toml`
 * Push the changes to GitHub
 * Create a tag of the form `v1.2.3` and push it to GitHub
 * GH actions will make the binaries automatically
