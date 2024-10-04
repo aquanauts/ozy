@@ -61,7 +61,7 @@ impl Installer for SingleBinaryZip {
 
     fn describe(&self) -> String {
         format!(
-            "single binary zip installer for {} v.{}",
+            "single binary zip installer for {} v{}",
             self.name, self.version
         )
     }

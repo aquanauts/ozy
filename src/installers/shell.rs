@@ -85,6 +85,6 @@ impl Installer for Shell {
     }
 
     fn describe(&self) -> String {
-        format!("shell installer for {} v.{}", self.name, self.version)
+        format!("shell installer for {} v{}", self.name, self.version)
     }
 }

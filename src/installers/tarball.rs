@@ -64,6 +64,6 @@ impl Installer for Tarball {
     }
 
     fn describe(&self) -> String {
-        format!("tarball installer for {} v.{}", self.name, self.version)
+        format!("tarball installer for {} v{}", self.name, self.version)
     }
 }
