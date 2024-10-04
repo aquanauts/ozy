@@ -9,9 +9,9 @@ use crate::installers::installer::Installer;
 use crate::installers::pip::Pip;
 use crate::installers::shell::Shell;
 use crate::installers::single_binary_zip::SingleBinaryZip;
+use crate::installers::symlink::Symlink;
 use crate::installers::tarball::Tarball;
 use crate::installers::zip::Zip;
-use crate::installers::symlink::Symlink;
 
 pub enum AppType {
     SingleBinaryZip,
@@ -21,7 +21,7 @@ pub enum AppType {
     Conda,
     Pip,
     Zip,
-    Symlink
+    Symlink,
 }
 
 pub struct App {
@@ -166,7 +166,7 @@ impl App {
                 };
                 Ok(())
             })
-            .with_context(|| format!("While installing {} v.{}", &self.name, &self.version))?;
+            .with_context(|| format!("While installing {} v{}", &self.name, &self.version))?;
 
         Ok(())
     }
@@ -275,7 +275,7 @@ mod tests {
             .expect("Failed to construct App");
         assert_eq!(
             single_binary_zip_app.installer.describe(),
-            "single binary zip installer for single_binary_zip_app v.1.10.1"
+            "single binary zip installer for single_binary_zip_app v1.10.1"
         );
     }
 
@@ -286,7 +286,7 @@ mod tests {
             App::new(&"tarball_app".to_string(), &config).expect("Failed to construct App");
         assert_eq!(
             tarball_app.installer.describe(),
-            "tarball installer for tarball_app v.0.7.0"
+            "tarball installer for tarball_app v0.7.0"
         );
     }
 
@@ -297,7 +297,7 @@ mod tests {
             App::new(&"shell_app".to_string(), &config).expect("Failed to construct App");
         assert_eq!(
             shell_app.installer.describe(),
-            "shell installer for shell_app v.4.11.0"
+            "shell installer for shell_app v4.11.0"
         );
     }
 
@@ -328,16 +328,17 @@ mod tests {
         let file_app = App::new(&"file_app".to_string(), &config).expect("Failed to construct App");
         assert_eq!(
             file_app.installer.describe(),
-            "file installer for file_app v.6.6.0"
+            "file installer for file_app v6.6.0"
         );
     }
     #[test]
     fn symlink_test() {
         let config = get_test_config();
-        let file_app = App::new(&"symlink_app".to_string(), &config).expect("Failed to construct App");
+        let file_app =
+            App::new(&"symlink_app".to_string(), &config).expect("Failed to construct App");
         assert_eq!(
             file_app.installer.describe(),
-            "symlink installer for symlink_app v.5.6.7"
+            "symlink installer for symlink_app v5.6.7"
         );
     }
 }

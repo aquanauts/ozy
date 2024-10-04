@@ -43,6 +43,6 @@ impl Installer for Zip {
     }
 
     fn describe(&self) -> String {
-        format!("zip installer for {} v.{}", self.name, self.version)
+        format!("zip installer for {} v{}", self.name, self.version)
     }
 }

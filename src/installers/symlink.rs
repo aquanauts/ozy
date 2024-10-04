@@ -24,7 +24,7 @@ impl Symlink {
         Ok(Symlink {
             name: name.clone(),
             version: version.to_string(),
-            path: path.to_owned()
+            path: path.to_owned(),
         })
     }
 }
@@ -35,14 +35,21 @@ impl Installer for Symlink {
         std::fs::create_dir_all(to_dir)?;
 
         if !self.path.exists() {
-            return Err(anyhow!("Destination symlink {} doesn't exist", self.path.display()))
+            return Err(anyhow!(
+                "Destination symlink {} doesn't exist",
+                self.path.display()
+            ));
         }
 
         let file = to_dir.join(&self.name);
-        std::os::unix::fs::symlink(&self.path, &file).context(anyhow!("Unable to symlink {} to {}", self.path.display(), file.display()))
+        std::os::unix::fs::symlink(&self.path, &file).context(anyhow!(
+            "Unable to symlink {} to {}",
+            self.path.display(),
+            file.display()
+        ))
     }
 
     fn describe(&self) -> String {
-        format!("symlink installer for {} v.{}", self.name, self.version)
+        format!("symlink installer for {} v{}", self.name, self.version)
     }
 }

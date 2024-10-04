@@ -45,6 +45,6 @@ impl Installer for File {
     }
 
     fn describe(&self) -> String {
-        format!("file installer for {} v.{}", self.name, self.version)
+        format!("file installer for {} v{}", self.name, self.version)
     }
 }
