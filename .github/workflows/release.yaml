@@ -22,11 +22,8 @@ jobs:
 
     runs-on: ${{ matrix.runs-on }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: ${{ matrix.target }}
+      - uses: actions/checkout@v4
+      - run: rustup target add ${{ matrix.target }}
       - if: ${{ contains(matrix.target, '-musl') }}
         run: sudo apt-get install musl-tools
       - name: Build
@@ -47,9 +44,9 @@ jobs:
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v4
       - name: Upload binaries to release
-        uses: marvinpinto/action-automatic-releases@latest
+        uses: softprops/action-gh-release@v2
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: true
           files: "**/ozy-*"
 

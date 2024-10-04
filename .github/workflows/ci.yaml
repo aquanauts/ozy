@@ -16,11 +16,8 @@ jobs:
 
     runs-on: ${{ matrix.runs-on }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: ${{ matrix.target }}
+      - uses: actions/checkout@v4
+      - run: rustup target add ${{ matrix.target }}
       - name: Format
         run: cargo fmt
       - name: Clippy
