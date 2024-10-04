@@ -2,6 +2,10 @@
 
 All changes are in the [Releases](https://github.com/aquanauts/ozy/releases).
 
+### [0.1.12](https://github.com/aquanauts/ozy/releases/tag/v0.1.12)
+* Mostly a test of the release process post deletion of python code
+* Changes to version output.
+
 ### [0.1.11](https://github.com/aquanauts/ozy/releases/tag/v0.1.11)
 * Use `is_file` to avoid "is a directory error" (fixing #66)
 * Support symbolic link installations.
