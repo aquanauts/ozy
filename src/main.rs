@@ -21,7 +21,14 @@ fn symlink_binaries(path_to_ozy: &std::path::PathBuf, config: &serde_yaml::Mappi
     // If this binary isn't installed in the correct location, move it there
     let expected_path_to_ozy = files::get_ozy_bin_dir()?.join("ozy");
     if path_to_ozy != &expected_path_to_ozy {
-        std::fs::rename(path_to_ozy, expected_path_to_ozy)?;
+        // attempt to rename (same filesystem), but fall back to copy and remove (different filesystem)
+        match std::fs::rename(path_to_ozy, expected_path_to_ozy.clone()) {
+            Ok(_) => {},
+            Err(_) => {
+                std::fs::copy(path_to_ozy, expected_path_to_ozy)?;
+                std::fs::remove_file(path_to_ozy)?;
+            },
+        }
     }
 
     let app_configs = match config.get("apps") {

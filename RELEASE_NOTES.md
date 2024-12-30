@@ -2,6 +2,9 @@
 
 All changes are in the [Releases](https://github.com/aquanauts/ozy/releases).
 
+### [0.1.13](https://github.com/aquanauts/ozy/releases/tag/v0.1.13)
+* Fix cross device link during install
+
 ### [0.1.12](https://github.com/aquanauts/ozy/releases/tag/v0.1.12)
 * Mostly a test of the release process post deletion of python code
 * Changes to version output.
