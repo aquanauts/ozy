@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Error, Result};
+use anyhow::{Context, Error, Result, anyhow};
 use file_lock::{FileLock, FileOptions};
 
 use crate::config::{apply_overrides, resolve};
@@ -32,13 +32,13 @@ pub struct App {
     executable_path: String,
 }
 
-pub fn find_app(config: &serde_yaml::Mapping, app: &String) -> Result<App> {
+pub fn find_app(config: &serde_yaml_ng::Mapping, app: &String) -> Result<App> {
     App::new(app, config)
         .with_context(|| format!("While attempting to find the app {} to run", app))
 }
 
 impl App {
-    pub fn new(name: &String, config: &serde_yaml::Mapping) -> Result<Self, Error> {
+    pub fn new(name: &String, config: &serde_yaml_ng::Mapping) -> Result<Self, Error> {
         let app_configs = config
             .get("apps")
             .ok_or_else(|| anyhow!("Expected an apps section in the YAML"))?
@@ -52,7 +52,7 @@ impl App {
             .unwrap()
             .clone();
 
-        if let Some(serde_yaml::Value::String(template)) = app_config.get("template") {
+        if let Some(serde_yaml_ng::Value::String(template)) = app_config.get("template") {
             let mut new_app_config = config["templates"][template].clone();
             apply_overrides(&app_config, new_app_config.as_mapping_mut().unwrap());
             app_config = new_app_config.as_mapping().unwrap().clone();
@@ -60,19 +60,19 @@ impl App {
 
         resolve(&mut app_config);
         let version = match app_config.get("version") {
-            Some(serde_yaml::Value::String(version)) => version.clone(),
+            Some(serde_yaml_ng::Value::String(version)) => version.clone(),
             _ => {
                 return Err(anyhow!("Expected a string version in config for {}", name));
             }
         };
 
         let relocatable = match app_config.get("relocatable") {
-            Some(serde_yaml::Value::Bool(value)) => value.to_owned(),
+            Some(serde_yaml_ng::Value::Bool(value)) => value.to_owned(),
             _ => true,
         };
 
         let app_type = match app_config.get("type") {
-            Some(serde_yaml::Value::String(app_type)) => match &app_type[..] {
+            Some(serde_yaml_ng::Value::String(app_type)) => match &app_type[..] {
                 "single_binary_zip" => AppType::SingleBinaryZip,
                 "tarball" => AppType::Tarball,
                 "shell_install" => AppType::Shell,
@@ -107,7 +107,7 @@ impl App {
         };
 
         let executable_path = match app_config.get("executable_path") {
-            Some(serde_yaml::Value::String(value)) => value,
+            Some(serde_yaml_ng::Value::String(value)) => value,
             _ => name,
         };
 
@@ -230,7 +230,7 @@ impl std::fmt::Display for App {
 
 #[cfg(test)]
 mod tests {
-    use serde_yaml::Mapping;
+    use serde_yaml_ng::Mapping;
 
     use crate::config::parse_ozy_config;
 

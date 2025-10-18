@@ -2,7 +2,7 @@ use crate::files::get_ozy_dir;
 use anyhow::{Context, Result};
 use std::{collections::HashMap, time::SystemTime};
 
-use serde_yaml::Mapping as Config;
+use serde_yaml_ng::Mapping as Config;
 
 pub fn config_mtime() -> Result<SystemTime> {
     Ok(std::fs::metadata(get_ozy_dir()?.join("ozy.yaml"))?
@@ -32,26 +32,26 @@ pub fn load_config(base_config_filename_override: Option<&str>) -> Result<Config
 
 pub fn parse_ozy_config(path: &std::path::PathBuf) -> Result<Config> {
     let raw_config = std::fs::read_to_string(path).with_context(|| "Reading config YAML")?;
-    serde_yaml::from_str(&raw_config).with_context(|| "Deserializing config YAML")
+    serde_yaml_ng::from_str(&raw_config).with_context(|| "Deserializing config YAML")
 }
 
-pub fn save_ozy_user_conf(conf: &serde_yaml::Mapping) -> Result<()> {
+pub fn save_ozy_user_conf(conf: &serde_yaml_ng::Mapping) -> Result<()> {
     let path = get_ozy_dir()?.join("ozy.user.yaml");
     let file = std::fs::File::create(path)?;
-    serde_yaml::to_writer(file, conf)?;
+    serde_yaml_ng::to_writer(file, conf)?;
     Ok(())
 }
 
-pub fn get_ozy_user_conf() -> Result<serde_yaml::Mapping> {
+pub fn get_ozy_user_conf() -> Result<serde_yaml_ng::Mapping> {
     load_config(Some("ozy.user.yaml"))
 }
 
-pub fn apply_overrides(source: &serde_yaml::Mapping, dest: &mut serde_yaml::Mapping) {
+pub fn apply_overrides(source: &serde_yaml_ng::Mapping, dest: &mut serde_yaml_ng::Mapping) {
     for (key, value) in source.into_iter() {
         match (value, dest.get_mut(key)) {
             (
-                serde_yaml::Value::Mapping(src_child_mapping),
-                Some(serde_yaml::Value::Mapping(dst_child_mapping)),
+                serde_yaml_ng::Value::Mapping(src_child_mapping),
+                Some(serde_yaml_ng::Value::Mapping(dst_child_mapping)),
             ) => {
                 apply_overrides(src_child_mapping, dst_child_mapping);
             }
@@ -62,7 +62,7 @@ pub fn apply_overrides(source: &serde_yaml::Mapping, dest: &mut serde_yaml::Mapp
     }
 }
 
-fn get_candidate_substitutions(mapping: &serde_yaml::Mapping) -> HashMap<String, String> {
+fn get_candidate_substitutions(mapping: &serde_yaml_ng::Mapping) -> HashMap<String, String> {
     let mut variables: HashMap<String, String> = HashMap::new();
 
     variables.insert(
@@ -93,7 +93,7 @@ fn get_candidate_substitutions(mapping: &serde_yaml::Mapping) -> HashMap<String,
     variables
 }
 
-pub fn resolve(mapping: &mut serde_yaml::Mapping) {
+pub fn resolve(mapping: &mut serde_yaml_ng::Mapping) {
     let variables = get_candidate_substitutions(mapping);
 
     let re = regex::Regex::new(r"\{.*?\}").unwrap();
@@ -118,6 +118,6 @@ pub fn resolve(mapping: &mut serde_yaml::Mapping) {
             s = s.replace(&format!("{{{}}}", potential_variable), replacement.unwrap());
         }
 
-        *value = serde_yaml::Value::String(s);
+        *value = serde_yaml_ng::Value::String(s);
     }
 }

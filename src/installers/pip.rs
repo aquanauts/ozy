@@ -1,6 +1,6 @@
 use super::installer::Installer;
 use crate::installers::{conda::conda_install, installer::run_subcommand_for_installer};
-use anyhow::{anyhow, Error, Result};
+use anyhow::{Error, Result, anyhow};
 
 pub struct Pip {
     package: String,
@@ -11,11 +11,15 @@ pub struct Pip {
 }
 
 impl Pip {
-    pub fn new(_: &String, version: &str, app_config: &serde_yaml::Mapping) -> Result<Self, Error> {
+    pub fn new(
+        _: &String,
+        version: &str,
+        app_config: &serde_yaml_ng::Mapping,
+    ) -> Result<Self, Error> {
         let package = app_config["package"].as_str().unwrap().to_string();
         let channels = match app_config.get("channels") {
             // TODO: Probably a way to do this without unwrapping
-            Some(serde_yaml::Value::Sequence(seq)) => seq
+            Some(serde_yaml_ng::Value::Sequence(seq)) => seq
                 .iter()
                 .map(|x| x.as_str().unwrap().to_string())
                 .collect(),
@@ -23,7 +27,7 @@ impl Pip {
         };
 
         let env = match app_config.get("env") {
-            Some(serde_yaml::Value::Mapping(env_map)) => env_map
+            Some(serde_yaml_ng::Value::Mapping(env_map)) => env_map
                 .iter()
                 .map(|(a, b)| {
                     (

@@ -1,6 +1,6 @@
 use super::installer::Installer;
 
-use anyhow::{anyhow, Context, Error, Result};
+use anyhow::{Context, Error, Result, anyhow};
 
 pub struct Zip {
     name: String,
@@ -12,10 +12,10 @@ impl Zip {
     pub fn new(
         name: &String,
         version: &str,
-        app_config: &serde_yaml::Mapping,
+        app_config: &serde_yaml_ng::Mapping,
     ) -> Result<Self, Error> {
         let url = match app_config.get("url") {
-            Some(serde_yaml::Value::String(url)) => url.clone(),
+            Some(serde_yaml_ng::Value::String(url)) => url.clone(),
             _ => {
                 return Err(anyhow!("Expected a string url in config for {}", name));
             }

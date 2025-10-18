@@ -4,7 +4,7 @@ use crate::utils::download_to;
 
 use super::installer::Installer;
 
-use anyhow::{anyhow, Error, Result};
+use anyhow::{Error, Result, anyhow};
 use bzip2::read::BzDecoder;
 use flate2::read::GzDecoder;
 use tar::Archive;
@@ -21,10 +21,10 @@ impl Tarball {
     pub fn new(
         name: &String,
         version: &str,
-        app_config: &serde_yaml::Mapping,
+        app_config: &serde_yaml_ng::Mapping,
     ) -> Result<Self, Error> {
         let url = match app_config.get("url") {
-            Some(serde_yaml::Value::String(url)) => url.clone(),
+            Some(serde_yaml_ng::Value::String(url)) => url.clone(),
             _ => {
                 return Err(anyhow!("Expected a string url in config for {}", name));
             }
