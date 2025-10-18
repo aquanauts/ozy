@@ -312,6 +312,17 @@ mod tests {
     }
 
     #[test]
+    fn pip_pinned_test() {
+        let config = get_test_config();
+        let pip_app =
+            App::new(&"pip_app_pinned".to_string(), &config).expect("Failed to construct App");
+        assert_eq!(
+            pip_app.installer.describe(),
+            "pip installer for pip_package=1.20.4"
+        );
+    }
+
+    #[test]
     fn conda_test() {
         let config = get_test_config();
         let conda_app =

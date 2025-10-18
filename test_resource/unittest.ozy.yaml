@@ -36,6 +36,12 @@ apps:
     type: pip
     package: pip_package
     executable_path: bin/pip_app
+  pip_app_pinned:
+    version: 1.20.4
+    type: pip
+    package: pip_package
+    executable_path: bin/pip_app
+    python_version: "3.13"
   conda_app:
     version: '45'
     type: conda
