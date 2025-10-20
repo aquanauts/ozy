@@ -7,6 +7,7 @@ pub struct Pip {
     version: String,
     channels: Vec<String>,
     env: Vec<(String, String)>,
+    python_version: Option<String>,
 }
 
 impl Pip {
@@ -34,11 +35,19 @@ impl Pip {
             _ => vec![],
         };
 
+        let python_version = match app_config.get("python_version") {
+            Some(serde_yaml::Value::String(v)) => Some(v.to_string()),
+            Some(serde_yaml::Value::Null) => None,
+            Some(_) => None,
+            None => None,
+        };
+
         Ok(Pip {
             package,
             version: version.to_string(),
             channels,
             env,
+            python_version,
         })
     }
 }
@@ -48,11 +57,16 @@ impl Installer for Pip {
         eprintln!("Running {}", self.describe());
         std::fs::create_dir_all(to_dir)?;
 
+        let to_install = match &self.python_version {
+            Some(v) => vec![format!("python={}", v.clone()), String::from("pip")],
+            None => vec![String::from("pip")],
+        };
+
         conda_install(
             &String::from("conda"),
             &self.channels,
             to_dir,
-            &[String::from("pip")],
+            to_install.as_slice(),
             &self.env,
         )?;
 
