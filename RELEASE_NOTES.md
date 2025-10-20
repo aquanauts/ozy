@@ -2,6 +2,9 @@
 
 All changes are in the [Releases](https://github.com/aquanauts/ozy/releases).
 
+### [0.1.14](https://github.com/aquanauts/ozy/releases/tag/v0.1.14)
+* Support a pinned python version for pip packages
+
 ### [0.1.13](https://github.com/aquanauts/ozy/releases/tag/v0.1.13)
 * Fix cross device link during install
 
