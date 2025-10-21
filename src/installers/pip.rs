@@ -40,8 +40,8 @@ impl Pip {
         };
 
         let python_version = match app_config.get("python_version") {
-            Some(serde_yaml::Value::String(v)) => Some(v.to_string()),
-            Some(serde_yaml::Value::Null) => None,
+            Some(serde_yaml_ng::Value::String(v)) => Some(v.to_string()),
+            Some(serde_yaml_ng::Value::Null) => None,
             Some(_) => None,
             None => None,
         };
