@@ -51,11 +51,10 @@ pub fn check_path(ozy_bin_dir: &std::path::Path) -> Result<bool, Error> {
     let bin_path_canonical = ozy_bin_dir.canonicalize()?;
     if let Some(paths) = env::var_os("PATH") {
         for path in env::split_paths(&paths) {
-            if let Ok(path) = path.canonicalize() {
-                if bin_path_canonical == path {
+            if let Ok(path) = path.canonicalize()
+                && bin_path_canonical == path {
                     return Ok(true);
                 }
-            }
         }
     }
     Ok(false)

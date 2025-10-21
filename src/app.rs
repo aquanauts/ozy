@@ -195,19 +195,17 @@ impl App {
 
     pub fn versions(&self) -> Result<Vec<String>> {
         let mut result = vec![];
-        if self.is_installed()? {
-            if let Some(app_base) = self.get_install_path()?.parent() {
+        if self.is_installed()?
+            && let Some(app_base) = self.get_install_path()?.parent() {
                 for entry in std::fs::read_dir(app_base)? {
-                    if let Ok(entry) = entry {
-                        if entry.metadata()?.is_dir() || entry.metadata()?.is_symlink() {
+                    if let Ok(entry) = entry
+                        && (entry.metadata()?.is_dir() || entry.metadata()?.is_symlink()) {
                             let installed_version =
                                 String::from(entry.file_name().to_string_lossy());
                             result.push(installed_version);
                         }
-                    }
                 }
             }
-        }
 
         Ok(result)
     }
