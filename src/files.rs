@@ -9,12 +9,12 @@ fn get_home_dir() -> Result<std::path::PathBuf, Error> {
 }
 
 pub fn delete_if_exists(path: &std::path::Path) -> Result<()> {
-    if path.exists() {
-        if path.is_dir() {
-            std::fs::remove_dir_all(path)?
-        } else {
-            std::fs::remove_file(path)?
-        }
+    if path.is_symlink() {
+        std::fs::remove_file(path)?
+    } else if path.is_dir() {
+        std::fs::remove_dir_all(path)?
+    } else if path.exists() {
+        std::fs::remove_file(path)?
     }
 
     Ok(())

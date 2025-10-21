@@ -80,35 +80,13 @@ fn install(app_names: &[String]) -> Result<()> {
 
 fn install_all() -> Result<()> {
     files::ensure_ozy_dirs()?;
+
     let config = config::load_config(None)?;
-    let app_configs = match config.get("apps") {
-        Some(serde_yaml_ng::Value::Mapping(app_configs)) => app_configs,
-        _ => {
-            return Err(anyhow!("Expected an mapping-type apps section in the YAML",));
-        }
-    };
-
-    for (name, _) in app_configs {
-        let name = match name {
-            serde_yaml_ng::Value::String(name) => name,
-            _ => {
-                return Err(anyhow!("Expected name of app config to be a string"));
-            }
-        };
-
-        let app = app::App::new(name, &config);
-        if app.is_err() {
-            eprintln!(
-                "Skipping incompatible app config for {} due to: {}",
-                name,
-                app.err().unwrap()
-            );
-            continue;
-        }
-
-        eprintln!("Installing {}", name);
-        app?.ensure_installed()
-            .with_context(|| format!("While ensuring app {} is installed", name))?;
+    for appcfg in get_apps(&config)? {
+        eprintln!("Installing {}", appcfg.name);
+        appcfg
+            .ensure_installed()
+            .with_context(|| format!("While ensuring app {} is installed", appcfg.name))?;
     }
 
     Ok(())
@@ -169,6 +147,17 @@ fn clean() -> Result<()> {
     files::delete_ozy_dirs()
 }
 
+fn prune() -> Result<()> {
+    let config = config::load_config(None).context("While loading ozy config")?;
+    for app in get_apps(&config)? {
+        // see if there are any extra versions installed
+        // then remove all but the current one
+        app.prune_other_versions()?
+    }
+
+    Ok(())
+}
+
 fn should_update(config: &serde_yaml_ng::Mapping) -> Result<bool> {
     match config.get("ozy_update_every") {
         Some(serde_yaml_ng::Value::Number(update_every)) => {
@@ -218,7 +207,7 @@ fn get_apps(config: &serde_yaml_ng::Mapping) -> Result<Vec<app::App>> {
         }
     };
 
-    let mut result = vec![];
+    let mut result: Vec<app::App> = Vec::with_capacity(app_configs.len());
     for (name, _) in app_configs {
         let name = match name {
             serde_yaml_ng::Value::String(name) => name,
@@ -315,11 +304,22 @@ fn sync(path_to_ozy: &std::path::PathBuf) -> Result<()> {
     Ok(())
 }
 
-fn list() -> Result<()> {
+fn list(verbose: bool) -> Result<()> {
     let config = config::load_config(None)?;
     let apps = get_apps(&config)?;
-    for app in apps.iter() {
-        println!("{}", app.name);
+    if verbose {
+        for app in apps.iter() {
+            println!(
+                "{}@{} [{}]",
+                app.name,
+                app.version,
+                app.versions()?.join(" ")
+            );
+        }
+    } else {
+        for app in apps.iter() {
+            println!("{}", app.name);
+        }
     }
 
     Ok(())
@@ -430,7 +430,10 @@ install:
     Info,
 
     #[clap(about = "List all the managed apps")]
-    List,
+    List {
+        #[arg(short, long)]
+        verbose: bool,
+    },
 
     #[clap(trailing_var_arg = true, about = "Runs the given application")]
     Run {
@@ -452,6 +455,8 @@ the relevant symlinks are created in your ozy bin directory.
 "#
     )]
     Sync,
+    #[clap(about = "Remove versions no longer referenced in the configuration")]
+    Prune,
 }
 
 fn main() -> Result<(), Error> {
@@ -483,7 +488,7 @@ fn main() -> Result<(), Error> {
             Commands::Install { app_names } => install(app_names),
             Commands::InstallAll => install_all(),
             Commands::Info => info(did_path_contain_ozy),
-            Commands::List => list(),
+            Commands::List { verbose } => list(*verbose),
             Commands::MakefileConfig {
                 makefile_var,
                 app_names,
@@ -491,6 +496,7 @@ fn main() -> Result<(), Error> {
             Commands::Run { app_name, app_args } => run(app_name, app_args),
             Commands::Update { url } => update(&exe_path, url),
             Commands::Sync => sync(&exe_path),
+            Commands::Prune => prune(),
         }
     } else {
         let args = std::env::args().collect::<Vec<String>>();

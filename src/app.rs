@@ -192,6 +192,46 @@ impl App {
             .join(&self.name)
             .join(&self.version))
     }
+
+    pub fn versions(&self) -> Result<Vec<String>> {
+        let mut result = vec![];
+        if self.is_installed()? {
+            if let Some(app_base) = self.get_install_path()?.parent() {
+                for entry in std::fs::read_dir(app_base)? {
+                    if let Ok(entry) = entry {
+                        if entry.metadata()?.is_dir() || entry.metadata()?.is_symlink() {
+                            let installed_version =
+                                String::from(entry.file_name().to_string_lossy());
+                            result.push(installed_version);
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(result)
+    }
+
+    pub fn prune_other_versions(&self) -> Result<()> {
+        for installed_version in self.versions()? {
+            if installed_version != self.version {
+                println!("Pruning {} {}", self.name, installed_version);
+                let installed_internal_path = self
+                    .get_internal_install_path()?
+                    .with_file_name(&installed_version);
+                let installed_path = self.get_install_path()?.with_file_name(&installed_version);
+                delete_if_exists(installed_internal_path.as_path()).context(format!(
+                    "While deleting {}@{}",
+                    self.name, installed_version
+                ))?;
+                delete_if_exists(installed_path.as_path()).context(format!(
+                    "While deleting {}@{}",
+                    self.name, installed_version
+                ))?;
+            }
+        }
+        Ok(())
+    }
 }
 
 impl std::hash::Hash for App {
