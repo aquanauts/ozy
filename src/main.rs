@@ -23,11 +23,11 @@ fn symlink_binaries(path_to_ozy: &std::path::PathBuf, config: &serde_yaml::Mappi
     if path_to_ozy != &expected_path_to_ozy {
         // attempt to rename (same filesystem), but fall back to copy and remove (different filesystem)
         match std::fs::rename(path_to_ozy, expected_path_to_ozy.clone()) {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(_) => {
                 std::fs::copy(path_to_ozy, expected_path_to_ozy)?;
                 std::fs::remove_file(path_to_ozy)?;
-            },
+            }
         }
     }
 
@@ -163,6 +163,30 @@ fn makefile_config(
 
 fn clean() -> Result<()> {
     files::delete_ozy_dirs()
+}
+
+fn rm(app_name: &String, clear_cache: &bool) -> Result<()> {
+    // remove the symlink from ~/.ozy/bin/
+    let symlink_path = files::get_ozy_bin_dir()?.join(app_name);
+    if symlink_path.exists() {
+        std::fs::remove_file(&symlink_path)
+            .with_context(|| format!("While removing symlink for {}", app_name))?;
+        eprintln!("Removed {} from ozy bin directory", app_name);
+    } else {
+        eprintln!("Warning: {} not found in ozy bin directory", app_name);
+    }
+
+    // optionally remove cached versions from ~/.cache/ozy/{app_name}/
+    if *clear_cache {
+        let cache_path = files::get_ozy_cache_dir()?.join(app_name);
+        if cache_path.exists() {
+            files::delete_if_exists(&cache_path)
+                .with_context(|| format!("While removing cached versions of {}", app_name))?;
+            eprintln!("Removed cached versions of {}", app_name);
+        }
+    }
+
+    Ok(())
 }
 
 fn should_update(config: &serde_yaml::Mapping) -> Result<bool> {
@@ -448,6 +472,13 @@ the relevant symlinks are created in your ozy bin directory.
 "#
     )]
     Sync,
+
+    #[clap(about = "Remove specific application from ozy")]
+    Rm {
+        app_name: String,
+        #[arg(long, help = "Also remove cached versions")]
+        clear_cache: bool,
+    },
 }
 
 fn main() -> Result<(), Error> {
@@ -485,6 +516,10 @@ fn main() -> Result<(), Error> {
             Commands::Run { app_name, app_args } => run(app_name, app_args),
             Commands::Update { url } => update(&exe_path, url),
             Commands::Sync => sync(&exe_path),
+            Commands::Rm {
+                app_name,
+                clear_cache,
+            } => rm(app_name, clear_cache),
         }
     } else {
         let args = std::env::args().collect::<Vec<String>>();
