@@ -476,7 +476,7 @@ the relevant symlinks are created in your ozy bin directory.
     #[clap(about = "Remove specific application from ozy")]
     Rm {
         app_name: String,
-        #[arg(long, help = "Also remove cached versions")]
+        #[arg(long, default_value_t = false, help = "Also remove cached versions")]
         clear_cache: bool,
     },
 }
