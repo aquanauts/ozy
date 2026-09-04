@@ -12,7 +12,10 @@ jobs:
             runs-on: ubuntu-22.04
           - target: x86_64-apple-darwin
             asset: ozy-Darwin-x86_64
-            runs-on: macos-13
+            runs-on: macos-26-intel
+          - target: arm64-apple-darwin
+            asset: ozy-Darwin-arm64
+            runs-on: macos-26
 
     runs-on: ${{ matrix.runs-on }}
     steps:
