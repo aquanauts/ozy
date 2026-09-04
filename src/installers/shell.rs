@@ -2,7 +2,7 @@ use super::installer::Installer;
 use crate::{installers::installer::run_subcommand_for_installer, utils::download_to};
 use tempfile::tempdir;
 
-use anyhow::{anyhow, Context, Error, Result};
+use anyhow::{Context, Error, Result, anyhow};
 
 pub struct Shell {
     name: String,
@@ -16,23 +16,23 @@ impl Shell {
     pub fn new(
         name: &String,
         version: &str,
-        app_config: &serde_yaml::Mapping,
+        app_config: &serde_yaml_ng::Mapping,
     ) -> Result<Self, Error> {
         let url = match app_config.get("url") {
-            Some(serde_yaml::Value::String(url)) => url.clone(),
+            Some(serde_yaml_ng::Value::String(url)) => url.clone(),
             _ => {
                 return Err(anyhow!("Expected a string url in config for {}", name));
             }
         };
 
         let extra_path_during_install = match app_config.get("extra_path_during_install") {
-            Some(serde_yaml::Value::String(value)) => Some(value.clone()),
+            Some(serde_yaml_ng::Value::String(value)) => Some(value.clone()),
             _ => None,
         };
 
         let shell_args = match app_config.get("shell_args") {
             // TODO: Probably a way to do this without unwrapping
-            Some(serde_yaml::Value::Sequence(seq)) => seq
+            Some(serde_yaml_ng::Value::Sequence(seq)) => seq
                 .iter()
                 .map(|x| x.as_str().unwrap().to_string())
                 .collect(),

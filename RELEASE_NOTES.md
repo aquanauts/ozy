@@ -2,6 +2,11 @@
 
 All changes are in the [Releases](https://github.com/aquanauts/ozy/releases).
 
+### 0.2
+* Add a `prune` command to clean up versions not specified in the yaml config
+* Bump dependency versions in Cargo.lock
+* Update to 2024 edition
+
 ### [0.1.14](https://github.com/aquanauts/ozy/releases/tag/v0.1.14)
 * Support a pinned python version for pip packages
 

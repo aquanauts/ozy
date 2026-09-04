@@ -1,8 +1,8 @@
-use anyhow::{anyhow, Context, Error, Result};
+use anyhow::{Context, Error, Result, anyhow};
 use file_lock::{FileLock, FileOptions};
 
 use crate::config::{apply_overrides, resolve};
-use crate::files::{delete_if_exists, get_ozy_cache_dir};
+use crate::files::{delete_if_exists, get_ozy_cache_dir, remove_installed_version, versions_in};
 use crate::installers::conda::Conda;
 use crate::installers::file::File;
 use crate::installers::installer::Installer;
@@ -32,13 +32,13 @@ pub struct App {
     executable_path: String,
 }
 
-pub fn find_app(config: &serde_yaml::Mapping, app: &String) -> Result<App> {
+pub fn find_app(config: &serde_yaml_ng::Mapping, app: &String) -> Result<App> {
     App::new(app, config)
         .with_context(|| format!("While attempting to find the app {} to run", app))
 }
 
 impl App {
-    pub fn new(name: &String, config: &serde_yaml::Mapping) -> Result<Self, Error> {
+    pub fn new(name: &String, config: &serde_yaml_ng::Mapping) -> Result<Self, Error> {
         let app_configs = config
             .get("apps")
             .ok_or_else(|| anyhow!("Expected an apps section in the YAML"))?
@@ -52,7 +52,7 @@ impl App {
             .unwrap()
             .clone();
 
-        if let Some(serde_yaml::Value::String(template)) = app_config.get("template") {
+        if let Some(serde_yaml_ng::Value::String(template)) = app_config.get("template") {
             let mut new_app_config = config["templates"][template].clone();
             apply_overrides(&app_config, new_app_config.as_mapping_mut().unwrap());
             app_config = new_app_config.as_mapping().unwrap().clone();
@@ -60,19 +60,19 @@ impl App {
 
         resolve(&mut app_config);
         let version = match app_config.get("version") {
-            Some(serde_yaml::Value::String(version)) => version.clone(),
+            Some(serde_yaml_ng::Value::String(version)) => version.clone(),
             _ => {
                 return Err(anyhow!("Expected a string version in config for {}", name));
             }
         };
 
         let relocatable = match app_config.get("relocatable") {
-            Some(serde_yaml::Value::Bool(value)) => value.to_owned(),
+            Some(serde_yaml_ng::Value::Bool(value)) => value.to_owned(),
             _ => true,
         };
 
         let app_type = match app_config.get("type") {
-            Some(serde_yaml::Value::String(app_type)) => match &app_type[..] {
+            Some(serde_yaml_ng::Value::String(app_type)) => match &app_type[..] {
                 "single_binary_zip" => AppType::SingleBinaryZip,
                 "tarball" => AppType::Tarball,
                 "shell_install" => AppType::Shell,
@@ -107,7 +107,7 @@ impl App {
         };
 
         let executable_path = match app_config.get("executable_path") {
-            Some(serde_yaml::Value::String(value)) => value,
+            Some(serde_yaml_ng::Value::String(value)) => value,
             _ => name,
         };
 
@@ -129,25 +129,24 @@ impl App {
         result
     }
 
+    fn lock_version(&self, version: &str) -> Result<FileLock> {
+        let lock_for_writing = FileOptions::new().create(true).write(true).read(true);
+        let lockfile_path = self.get_app_base()?.join(format!("{}.lock", version));
+        let _lock =
+            FileLock::lock(lockfile_path, true, lock_for_writing).context("Locking file")?;
+
+        Ok(_lock)
+    }
+
     fn ensure_installed_internal(&self) -> Result<()> {
         if self.is_installed().context("Checking if it's installed")? {
             return Ok(());
         }
-
         let install_dir = self.get_install_path()?;
         std::fs::create_dir_all(install_dir.parent().unwrap())
             .context("While creating parent directory of install directory")?;
 
-        let lock_for_writing = FileOptions::new().create(true).write(true).read(true);
-        let lockfile_path = install_dir.parent().unwrap().join(format!(
-            "{}.lock",
-            install_dir.file_name().unwrap().to_string_lossy()
-        ));
-        let _lock =
-            FileLock::lock(lockfile_path, true, lock_for_writing).context("Locking file")?;
-        if self.is_installed().context("Checking if it's installed")? {
-            return Ok(());
-        }
+        let _lock = self.lock_version(&self.version);
 
         // In Python we generate a UUID here; is that necessary?
         let uniq_install_dir = self
@@ -166,7 +165,7 @@ impl App {
                 };
                 Ok(())
             })
-            .with_context(|| format!("While installing {} v{}", &self.name, &self.version))?;
+            .with_context(|| format!("While installing {} v{}", self.name, self.version))?;
 
         Ok(())
     }
@@ -191,6 +190,43 @@ impl App {
             .join("internal_install")
             .join(&self.name)
             .join(&self.version))
+    }
+
+    fn get_app_base(&self) -> Result<std::path::PathBuf, Error> {
+        Ok(get_ozy_cache_dir()?.join(&self.name))
+    }
+
+    pub fn versions(&self) -> Result<Vec<String>> {
+        versions_in(&self.get_app_base()?)
+    }
+
+    pub fn uninstall_version(&self, installed_version: &str) -> Result<()> {
+        let lock = self.lock_version(installed_version)?;
+        let app_base = self.get_app_base()?;
+
+        remove_installed_version(&get_ozy_cache_dir()?, &app_base, installed_version)
+            .with_context(|| format!("While deleting {}@{}", self.name, installed_version))?;
+
+        std::fs::remove_file(app_base.join(format!("{}.lock", installed_version)))
+            .context("While removing lock file")?;
+
+        lock.unlock()?;
+
+        Ok(())
+    }
+
+    pub fn prune_other_versions(&self, dry_run: bool) -> Result<()> {
+        for installed_version in self.versions()? {
+            if installed_version != self.version {
+                if dry_run {
+                    println!("Would prune {} {}", self.name, installed_version);
+                } else {
+                    println!("Pruning {} {}", self.name, installed_version);
+                    self.uninstall_version(&installed_version)?;
+                }
+            }
+        }
+        Ok(())
     }
 }
 
@@ -230,7 +266,7 @@ impl std::fmt::Display for App {
 
 #[cfg(test)]
 mod tests {
-    use serde_yaml::Mapping;
+    use serde_yaml_ng::Mapping;
 
     use crate::config::parse_ozy_config;
 

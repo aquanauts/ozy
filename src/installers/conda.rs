@@ -1,6 +1,6 @@
-use super::installer::{run_subcommand_for_installer, Installer};
+use super::installer::{Installer, run_subcommand_for_installer};
 use crate::files::delete_if_exists;
-use anyhow::{anyhow, Error, Result};
+use anyhow::{Error, Result, anyhow};
 
 use tempfile::tempdir;
 
@@ -53,28 +53,28 @@ pub fn conda_install(
 }
 
 impl Conda {
-    pub fn new(_: &str, version: &str, app_config: &serde_yaml::Mapping) -> Result<Self, Error> {
+    pub fn new(_: &str, version: &str, app_config: &serde_yaml_ng::Mapping) -> Result<Self, Error> {
         let package = app_config["package"].as_str().unwrap().to_string();
         let channels = match app_config.get("channels") {
             // TODO: Probably a way to do this without unwrapping
-            Some(serde_yaml::Value::Sequence(seq)) => seq
+            Some(serde_yaml_ng::Value::Sequence(seq)) => seq
                 .iter()
                 .map(|x| x.as_str().unwrap().to_string())
                 .collect(),
             _ => vec![],
         };
         let conda_bin = match app_config.get("conda_bin") {
-            Some(serde_yaml::Value::String(value)) => value.to_owned(),
+            Some(serde_yaml_ng::Value::String(value)) => value.to_owned(),
             _ => String::from("conda"),
         };
 
         let pyinstaller = match app_config.get("pyinstaller") {
-            Some(serde_yaml::Value::Bool(value)) => value.to_owned(),
+            Some(serde_yaml_ng::Value::Bool(value)) => value.to_owned(),
             _ => false,
         };
 
         let env = match app_config.get("env") {
-            Some(serde_yaml::Value::Mapping(env_map)) => env_map
+            Some(serde_yaml_ng::Value::Mapping(env_map)) => env_map
                 .iter()
                 .map(|(a, b)| {
                     (

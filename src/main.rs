@@ -1,6 +1,6 @@
 use std::{path, time::Duration};
 
-use anyhow::{anyhow, Context, Error, Result};
+use anyhow::{Context, Error, Result, anyhow};
 use clap::{Parser, Subcommand};
 use semver::Version;
 use std::os::unix::fs::PermissionsExt;
@@ -17,22 +17,25 @@ mod utils;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-fn symlink_binaries(path_to_ozy: &std::path::PathBuf, config: &serde_yaml::Mapping) -> Result<()> {
+fn symlink_binaries(
+    path_to_ozy: &std::path::PathBuf,
+    config: &serde_yaml_ng::Mapping,
+) -> Result<()> {
     // If this binary isn't installed in the correct location, move it there
     let expected_path_to_ozy = files::get_ozy_bin_dir()?.join("ozy");
     if path_to_ozy != &expected_path_to_ozy {
         // attempt to rename (same filesystem), but fall back to copy and remove (different filesystem)
         match std::fs::rename(path_to_ozy, expected_path_to_ozy.clone()) {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(_) => {
                 std::fs::copy(path_to_ozy, expected_path_to_ozy)?;
                 std::fs::remove_file(path_to_ozy)?;
-            },
+            }
         }
     }
 
     let app_configs = match config.get("apps") {
-        Some(serde_yaml::Value::Mapping(app_configs)) => app_configs,
+        Some(serde_yaml_ng::Value::Mapping(app_configs)) => app_configs,
         _ => {
             return Err(anyhow!("Expected an mapping-type apps section in the YAML",));
         }
@@ -48,10 +51,10 @@ fn symlink_binaries(path_to_ozy: &std::path::PathBuf, config: &serde_yaml::Mappi
 fn init(path_to_ozy: &std::path::PathBuf, url: &str) -> Result<()> {
     files::ensure_ozy_dirs()?;
 
-    let mut user_conf = serde_yaml::Mapping::new();
+    let mut user_conf = serde_yaml_ng::Mapping::new();
     user_conf.insert(
-        serde_yaml::Value::String("url".to_string()),
-        serde_yaml::Value::String(url.to_string()),
+        serde_yaml_ng::Value::String("url".to_string()),
+        serde_yaml_ng::Value::String(url.to_string()),
     );
     config::save_ozy_user_conf(&user_conf)?;
 
@@ -77,35 +80,13 @@ fn install(app_names: &[String]) -> Result<()> {
 
 fn install_all() -> Result<()> {
     files::ensure_ozy_dirs()?;
+
     let config = config::load_config(None)?;
-    let app_configs = match config.get("apps") {
-        Some(serde_yaml::Value::Mapping(app_configs)) => app_configs,
-        _ => {
-            return Err(anyhow!("Expected an mapping-type apps section in the YAML",));
-        }
-    };
-
-    for (name, _) in app_configs {
-        let name = match name {
-            serde_yaml::Value::String(name) => name,
-            _ => {
-                return Err(anyhow!("Expected name of app config to be a string"));
-            }
-        };
-
-        let app = app::App::new(name, &config);
-        if app.is_err() {
-            eprintln!(
-                "Skipping incompatible app config for {} due to: {}",
-                name,
-                app.err().unwrap()
-            );
-            continue;
-        }
-
-        eprintln!("Installing {}", name);
-        app?.ensure_installed()
-            .with_context(|| format!("While ensuring app {} is installed", name))?;
+    for appcfg in get_apps(&config)? {
+        eprintln!("Installing {}", appcfg.name);
+        appcfg
+            .ensure_installed()
+            .with_context(|| format!("While ensuring app {} is installed", appcfg.name))?;
     }
 
     Ok(())
@@ -133,7 +114,8 @@ fn makefile_config_internal(
                 return Err(anyhow!(
                     "'{}' found in PATH earlier than ozy: results could be inconsistent (found at {})",
                     app_name,
-                    os_found.display()));
+                    os_found.display()
+                ));
             }
         } else {
             return Err(anyhow!(
@@ -142,7 +124,7 @@ fn makefile_config_internal(
             ));
         }
     }
-    Ok(format!("{}:={}", &makefile_var, ozy_bin_dir.display()))
+    Ok(format!("{}:={}", makefile_var, ozy_bin_dir.display()))
 }
 
 fn makefile_config(
@@ -165,9 +147,33 @@ fn clean() -> Result<()> {
     files::delete_ozy_dirs()
 }
 
-fn should_update(config: &serde_yaml::Mapping) -> Result<bool> {
+fn prune(app_names: &[String], dry_run: bool) -> Result<()> {
+    let config = config::load_config(None).context("While loading ozy config")?;
+    if !dry_run {
+        files::sweep_trash(&files::get_ozy_cache_dir()?).context("While emptying the trash")?;
+    }
+
+    let apps = if app_names.is_empty() {
+        get_apps(&config)?
+    } else {
+        app_names
+            .iter()
+            .map(|app_name| app::App::new(app_name, &config))
+            .collect::<Result<Vec<_>>>()?
+    };
+
+    for app in apps {
+        // see if there are any extra versions installed
+        // then remove all but the current one
+        app.prune_other_versions(dry_run)?
+    }
+
+    Ok(())
+}
+
+fn should_update(config: &serde_yaml_ng::Mapping) -> Result<bool> {
     match config.get("ozy_update_every") {
-        Some(serde_yaml::Value::Number(update_every)) => {
+        Some(serde_yaml_ng::Value::Number(update_every)) => {
             let update_every = Duration::from_secs(update_every.as_u64().unwrap_or_default());
             let since_last_update = std::time::SystemTime::now().duration_since(
                 config::config_mtime().context("While determining config mtime")?,
@@ -206,18 +212,18 @@ fn run(app_name: &String, args: &[String]) -> Result<()> {
     ))
 }
 
-fn get_apps(config: &serde_yaml::Mapping) -> Result<Vec<app::App>> {
+fn get_apps(config: &serde_yaml_ng::Mapping) -> Result<Vec<app::App>> {
     let app_configs = match config.get("apps") {
-        Some(serde_yaml::Value::Mapping(app_configs)) => app_configs,
+        Some(serde_yaml_ng::Value::Mapping(app_configs)) => app_configs,
         _ => {
             return Err(anyhow!("Expected an mapping-type apps section in the YAML",));
         }
     };
 
-    let mut result = vec![];
+    let mut result: Vec<app::App> = Vec::with_capacity(app_configs.len());
     for (name, _) in app_configs {
         let name = match name {
-            serde_yaml::Value::String(name) => name,
+            serde_yaml_ng::Value::String(name) => name,
             _ => {
                 return Err(anyhow!("Expected name of app config to be a string"));
             }
@@ -262,13 +268,13 @@ fn update(path_to_ozy: &std::path::PathBuf, url: &Option<String>) -> Result<()> 
             new_version
         );
 
-        let mut config_update_slice = serde_yaml::Mapping::new();
+        let mut config_update_slice = serde_yaml_ng::Mapping::new();
         config_update_slice.insert(
-            serde_yaml::Value::String("ozy_download".to_string()),
+            serde_yaml_ng::Value::String("ozy_download".to_string()),
             new_config["ozy_download"].clone(),
         );
         config_update_slice.insert(
-            serde_yaml::Value::String("version".to_string()),
+            serde_yaml_ng::Value::String("version".to_string()),
             new_config["ozy_version"].clone(),
         );
         config::resolve(&mut config_update_slice);
@@ -294,10 +300,10 @@ fn update(path_to_ozy: &std::path::PathBuf, url: &Option<String>) -> Result<()> 
     let config = config::load_config(None)?;
     symlink_binaries(path_to_ozy, &config)?;
 
-    let mut user_conf = serde_yaml::Mapping::new();
+    let mut user_conf = serde_yaml_ng::Mapping::new();
     user_conf.insert(
-        serde_yaml::Value::String("url".to_string()),
-        serde_yaml::Value::String(url.to_string()),
+        serde_yaml_ng::Value::String("url".to_string()),
+        serde_yaml_ng::Value::String(url.to_string()),
     );
     config::save_ozy_user_conf(&user_conf)?;
 
@@ -311,11 +317,22 @@ fn sync(path_to_ozy: &std::path::PathBuf) -> Result<()> {
     Ok(())
 }
 
-fn list() -> Result<()> {
+fn list(verbose: bool) -> Result<()> {
     let config = config::load_config(None)?;
     let apps = get_apps(&config)?;
-    for app in apps.iter() {
-        println!("{}", app.name);
+    if verbose {
+        for app in apps.iter() {
+            println!(
+                "{}@{} [{}]",
+                app.name,
+                app.version,
+                app.versions()?.join(" ")
+            );
+        }
+    } else {
+        for app in apps.iter() {
+            println!("{}", app.name);
+        }
     }
 
     Ok(())
@@ -426,7 +443,10 @@ install:
     Info,
 
     #[clap(about = "List all the managed apps")]
-    List,
+    List {
+        #[arg(short, long)]
+        verbose: bool,
+    },
 
     #[clap(trailing_var_arg = true, about = "Runs the given application")]
     Run {
@@ -448,6 +468,19 @@ the relevant symlinks are created in your ozy bin directory.
 "#
     )]
     Sync,
+    #[clap(
+        trailing_var_arg = true,
+        about = "Remove versions no longer referenced in the configuration",
+        long_about = r#"
+Removes any installed version of an app that isn't the version the configuration
+currently names. With no arguments, prunes every configured app.
+"#
+    )]
+    Prune {
+        #[arg(short = 'n', long, help = "List what would be removed, remove nothing")]
+        dry_run: bool,
+        app_names: Vec<String>,
+    },
 }
 
 fn main() -> Result<(), Error> {
@@ -456,7 +489,9 @@ fn main() -> Result<(), Error> {
     let did_path_contain_ozy = check_path(&ozy_bin_dir)?;
     if !did_path_contain_ozy {
         let updated_path = format!("{}:{}", ozy_bin_dir.display(), std::env::var("PATH")?);
-        std::env::set_var("PATH", updated_path);
+        unsafe {
+            std::env::set_var("PATH", updated_path);
+        };
     }
 
     let invoked_as = std::env::args()
@@ -477,7 +512,7 @@ fn main() -> Result<(), Error> {
             Commands::Install { app_names } => install(app_names),
             Commands::InstallAll => install_all(),
             Commands::Info => info(did_path_contain_ozy),
-            Commands::List => list(),
+            Commands::List { verbose } => list(*verbose),
             Commands::MakefileConfig {
                 makefile_var,
                 app_names,
@@ -485,6 +520,7 @@ fn main() -> Result<(), Error> {
             Commands::Run { app_name, app_args } => run(app_name, app_args),
             Commands::Update { url } => update(&exe_path, url),
             Commands::Sync => sync(&exe_path),
+            Commands::Prune { dry_run, app_names } => prune(app_names, *dry_run),
         }
     } else {
         let args = std::env::args().collect::<Vec<String>>();

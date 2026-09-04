@@ -1,6 +1,6 @@
 use super::installer::Installer;
 
-use anyhow::{anyhow, Context, Error, Result};
+use anyhow::{Context, Error, Result, anyhow};
 
 pub struct Symlink {
     name: String,
@@ -12,10 +12,10 @@ impl Symlink {
     pub fn new(
         name: &String,
         version: &str,
-        app_config: &serde_yaml::Mapping,
+        app_config: &serde_yaml_ng::Mapping,
     ) -> Result<Self, Error> {
         let path = match app_config.get("path") {
-            Some(serde_yaml::Value::String(path)) => std::path::Path::new(path),
+            Some(serde_yaml_ng::Value::String(path)) => std::path::Path::new(path),
             _ => {
                 return Err(anyhow!("Expected a string path in config for {}", name));
             }
