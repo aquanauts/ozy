@@ -2,7 +2,7 @@ use anyhow::{Context, Error, Result, anyhow};
 use file_lock::{FileLock, FileOptions};
 
 use crate::config::{apply_overrides, resolve};
-use crate::files::{delete_if_exists, get_ozy_cache_dir};
+use crate::files::{delete_if_exists, get_ozy_cache_dir, remove_installed_version, versions_in};
 use crate::installers::conda::Conda;
 use crate::installers::file::File;
 use crate::installers::installer::Installer;
@@ -129,25 +129,24 @@ impl App {
         result
     }
 
+    fn lock_version(&self, version: &str) -> Result<FileLock> {
+        let lock_for_writing = FileOptions::new().create(true).write(true).read(true);
+        let lockfile_path = self.get_app_base()?.join(format!("{}.lock", version));
+        let _lock =
+            FileLock::lock(lockfile_path, true, lock_for_writing).context("Locking file")?;
+
+        Ok(_lock)
+    }
+
     fn ensure_installed_internal(&self) -> Result<()> {
         if self.is_installed().context("Checking if it's installed")? {
             return Ok(());
         }
-
         let install_dir = self.get_install_path()?;
         std::fs::create_dir_all(install_dir.parent().unwrap())
             .context("While creating parent directory of install directory")?;
 
-        let lock_for_writing = FileOptions::new().create(true).write(true).read(true);
-        let lockfile_path = install_dir.parent().unwrap().join(format!(
-            "{}.lock",
-            install_dir.file_name().unwrap().to_string_lossy()
-        ));
-        let _lock =
-            FileLock::lock(lockfile_path, true, lock_for_writing).context("Locking file")?;
-        if self.is_installed().context("Checking if it's installed")? {
-            return Ok(());
-        }
+        let _lock = self.lock_version(&self.version);
 
         // In Python we generate a UUID here; is that necessary?
         let uniq_install_dir = self
@@ -166,7 +165,7 @@ impl App {
                 };
                 Ok(())
             })
-            .with_context(|| format!("While installing {} v{}", &self.name, &self.version))?;
+            .with_context(|| format!("While installing {} v{}", self.name, self.version))?;
 
         Ok(())
     }
@@ -193,39 +192,38 @@ impl App {
             .join(&self.version))
     }
 
-    pub fn versions(&self) -> Result<Vec<String>> {
-        let mut result = vec![];
-        if self.is_installed()?
-            && let Some(app_base) = self.get_install_path()?.parent() {
-                for entry in std::fs::read_dir(app_base)? {
-                    if let Ok(entry) = entry
-                        && (entry.metadata()?.is_dir() || entry.metadata()?.is_symlink()) {
-                            let installed_version =
-                                String::from(entry.file_name().to_string_lossy());
-                            result.push(installed_version);
-                        }
-                }
-            }
-
-        Ok(result)
+    fn get_app_base(&self) -> Result<std::path::PathBuf, Error> {
+        Ok(get_ozy_cache_dir()?.join(&self.name))
     }
 
-    pub fn prune_other_versions(&self) -> Result<()> {
+    pub fn versions(&self) -> Result<Vec<String>> {
+        versions_in(&self.get_app_base()?)
+    }
+
+    pub fn uninstall_version(&self, installed_version: &str) -> Result<()> {
+        let lock = self.lock_version(installed_version)?;
+        let app_base = self.get_app_base()?;
+
+        remove_installed_version(&get_ozy_cache_dir()?, &app_base, installed_version)
+            .with_context(|| format!("While deleting {}@{}", self.name, installed_version))?;
+
+        std::fs::remove_file(app_base.join(format!("{}.lock", installed_version)))
+            .context("While removing lock file")?;
+
+        lock.unlock()?;
+
+        Ok(())
+    }
+
+    pub fn prune_other_versions(&self, dry_run: bool) -> Result<()> {
         for installed_version in self.versions()? {
             if installed_version != self.version {
-                println!("Pruning {} {}", self.name, installed_version);
-                let installed_internal_path = self
-                    .get_internal_install_path()?
-                    .with_file_name(&installed_version);
-                let installed_path = self.get_install_path()?.with_file_name(&installed_version);
-                delete_if_exists(installed_internal_path.as_path()).context(format!(
-                    "While deleting {}@{}",
-                    self.name, installed_version
-                ))?;
-                delete_if_exists(installed_path.as_path()).context(format!(
-                    "While deleting {}@{}",
-                    self.name, installed_version
-                ))?;
+                if dry_run {
+                    println!("Would prune {} {}", self.name, installed_version);
+                } else {
+                    println!("Pruning {} {}", self.name, installed_version);
+                    self.uninstall_version(&installed_version)?;
+                }
             }
         }
         Ok(())

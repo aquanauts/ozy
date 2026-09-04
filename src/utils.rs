@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 
 fn is_request_retryable_based_on_error(err: &reqwest::Error) -> bool {
     if err.is_timeout() || err.is_connect() {

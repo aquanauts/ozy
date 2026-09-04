@@ -124,7 +124,7 @@ fn makefile_config_internal(
             ));
         }
     }
-    Ok(format!("{}:={}", &makefile_var, ozy_bin_dir.display()))
+    Ok(format!("{}:={}", makefile_var, ozy_bin_dir.display()))
 }
 
 fn makefile_config(
@@ -147,12 +147,25 @@ fn clean() -> Result<()> {
     files::delete_ozy_dirs()
 }
 
-fn prune() -> Result<()> {
+fn prune(app_names: &[String], dry_run: bool) -> Result<()> {
     let config = config::load_config(None).context("While loading ozy config")?;
-    for app in get_apps(&config)? {
+    if !dry_run {
+        files::sweep_trash(&files::get_ozy_cache_dir()?).context("While emptying the trash")?;
+    }
+
+    let apps = if app_names.is_empty() {
+        get_apps(&config)?
+    } else {
+        app_names
+            .iter()
+            .map(|app_name| app::App::new(app_name, &config))
+            .collect::<Result<Vec<_>>>()?
+    };
+
+    for app in apps {
         // see if there are any extra versions installed
         // then remove all but the current one
-        app.prune_other_versions()?
+        app.prune_other_versions(dry_run)?
     }
 
     Ok(())
@@ -455,8 +468,19 @@ the relevant symlinks are created in your ozy bin directory.
 "#
     )]
     Sync,
-    #[clap(about = "Remove versions no longer referenced in the configuration")]
-    Prune,
+    #[clap(
+        trailing_var_arg = true,
+        about = "Remove versions no longer referenced in the configuration",
+        long_about = r#"
+Removes any installed version of an app that isn't the version the configuration
+currently names. With no arguments, prunes every configured app.
+"#
+    )]
+    Prune {
+        #[arg(short = 'n', long, help = "List what would be removed, remove nothing")]
+        dry_run: bool,
+        app_names: Vec<String>,
+    },
 }
 
 fn main() -> Result<(), Error> {
@@ -496,7 +520,7 @@ fn main() -> Result<(), Error> {
             Commands::Run { app_name, app_args } => run(app_name, app_args),
             Commands::Update { url } => update(&exe_path, url),
             Commands::Sync => sync(&exe_path),
-            Commands::Prune => prune(),
+            Commands::Prune { dry_run, app_names } => prune(app_names, *dry_run),
         }
     } else {
         let args = std::env::args().collect::<Vec<String>>();
