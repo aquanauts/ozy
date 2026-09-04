@@ -18,11 +18,14 @@ jobs:
             runs-on: ubuntu-22.04
           - target: x86_64-apple-darwin
             asset: ozy-Darwin-x86_64
-            runs-on: macos-13
+            runs-on: macos-26-intel
+          - target: aarch64-apple-darwin
+            asset: ozy-Darwin-aarch64
+            runs-on: macos-26
 
     runs-on: ${{ matrix.runs-on }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: rustup target add ${{ matrix.target }}
       - if: ${{ contains(matrix.target, '-musl') }}
         run: sudo apt-get install musl-tools
