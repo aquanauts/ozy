@@ -2,7 +2,10 @@
 
 All changes are in the [Releases](https://github.com/aquanauts/ozy/releases).
 
-### 0.2
+### [0.2.1](https://github.com/aquanauts/ozy/releases/tag/v0.2.1)
+* Fix up CI - no code change
+
+### [0.2](https://github.com/aquanauts/ozy/releases/tag/v0.2)
 * Add a `prune` command to clean up versions not specified in the yaml config
 * Bump dependency versions in Cargo.lock
 * Update to 2024 edition
