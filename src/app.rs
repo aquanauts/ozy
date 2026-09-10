@@ -136,6 +136,11 @@ impl App {
             return Ok(());
         }
 
+        // Nothing valid is installed, and we hold the lock, so anything sitting at install_dir
+        // is junk from an earlier run - a dangling symlink, a stray file. Clear it, or the
+        // rename/symlink below fails with ENOTDIR/EEXIST on every future run.
+        delete_if_exists(install_dir.as_path())?;
+
         // In Python we generate a UUID here; is that necessary?
         let uniq_install_dir = self
             .get_internal_install_path()
@@ -177,8 +182,14 @@ impl App {
         // equivalent install is completed.
         match put_in_place {
             Err(err) if !self.is_installed().unwrap_or(false) => Err(err),
-            Err(_) if self.relocatable => trash_and_remove(&get_ozy_cache_dir()?, uniq_install_dir)
-                .context("While discarding a redundant install"),
+            Err(_) => {
+                if self.relocatable {
+                    // Best-effort: the app is installed, so failing to bin our redundant copy
+                    // is not worth failing the user's command over.
+                    let _ = trash_and_remove(&get_ozy_cache_dir()?, uniq_install_dir);
+                }
+                Ok(())
+            }
             _ => Ok(()),
         }
     }
@@ -458,17 +469,45 @@ mod tests {
     /// Point ozy's cache at `home`. $HOME is process-global, so tests that call this have to
     /// hold `HOME_LOCK` for as long as they use it.
     fn set_home(home: &std::path::Path) {
-        // SAFETY: nothing else in this test binary reads $HOME, and HOME_LOCK keeps the tests
-        // that do from overlapping.
+        // SAFETY: every test that sets or reads the environment holds HOME_LOCK for the
+        // duration, so no other thread is in getenv/setenv concurrently.
         unsafe { std::env::set_var("HOME", home) };
     }
 
     static HOME_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
+    /// Take HOME_LOCK, ignoring poisoning so a panicking test doesn't mask its sibling's
+    /// assertion failure with a PoisonError. Restores $HOME when dropped, so a test's tempdir
+    /// doesn't outlive it as a dangling $HOME for the rest of the process.
+    fn lock_home() -> HomeGuard {
+        HomeGuard {
+            was: std::env::var_os("HOME"),
+            _lock: HOME_LOCK.lock().unwrap_or_else(|e| e.into_inner()),
+        }
+    }
+
+    struct HomeGuard {
+        was: Option<std::ffi::OsString>,
+        _lock: std::sync::MutexGuard<'static, ()>,
+    }
+
+    impl Drop for HomeGuard {
+        fn drop(&mut self) {
+            // SAFETY: runs before _lock drops, so we still hold HOME_LOCK - see set_home.
+            match &self.was {
+                Some(home) => unsafe { std::env::set_var("HOME", home) },
+                None => unsafe { std::env::remove_var("HOME") },
+            }
+        }
+    }
+
+    const CHILD_RAN: &str = "child-ran";
+
     /// The other half of `concurrent_installs_do_not_clobber`; a no-op in a normal test run.
     /// ozy locks with fcntl, which is per-process, so the race only reproduces across processes.
     #[test]
     fn concurrent_install_child() {
+        let _guard = lock_home();
         if let Ok(home) = std::env::var("OZY_TEST_CHILD_HOME") {
             set_home(std::path::Path::new(&home));
             fake_app(
@@ -480,6 +519,9 @@ mod tests {
             )
             .ensure_installed()
             .expect("child install failed");
+            // Proof for the parent that this test actually ran: a filter that matches nothing
+            // also exits 0, so the child's exit status alone doesn't say the race was exercised.
+            std::fs::write(std::path::Path::new(&home).join(CHILD_RAN), "").expect("sentinel");
         }
     }
 
@@ -488,7 +530,7 @@ mod tests {
     /// of it (which fails with ENOTEMPTY, and then took the whole app directory down with it).
     #[test]
     fn concurrent_installs_do_not_clobber() {
-        let _guard = HOME_LOCK.lock().unwrap();
+        let _guard = lock_home();
         let home = tempfile::tempdir().expect("tempdir");
         let home_str = home.path().to_str().unwrap().to_string();
 
@@ -516,6 +558,10 @@ mod tests {
         ours.expect("install in this process failed");
         assert!(theirs.success(), "install in the child process failed");
         assert!(
+            home.path().join(CHILD_RAN).is_file(),
+            "the child test never ran, so nothing raced - has it been renamed?"
+        );
+        assert!(
             home.path().join(".cache/ozy/racy_app/1.0/marker").is_file(),
             "the installed app was clobbered by the racing install"
         );
@@ -525,7 +571,7 @@ mod tests {
     /// directory - other installed versions, and the lock files - with it.
     #[test]
     fn failed_install_leaves_the_rest_of_the_app_alone() {
-        let _guard = HOME_LOCK.lock().unwrap();
+        let _guard = lock_home();
         let home = tempfile::tempdir().expect("tempdir");
         let cache = home.path().join(".cache/ozy");
 
@@ -560,6 +606,35 @@ mod tests {
         assert!(
             !cache.join("internal_install/versioned_app/2.0").exists(),
             "the failed install left its half-written directory behind"
+        );
+    }
+
+    /// A dangling symlink at the install path - left by a non-relocatable install whose target
+    /// went away - used to wedge the app forever: it isn't a valid install, so the rename onto
+    /// it failed with ENOTDIR on every subsequent run.
+    #[test]
+    fn a_wedged_install_path_recovers() {
+        let _guard = lock_home();
+        let home = tempfile::tempdir().expect("tempdir");
+        let install_dir = home.path().join(".cache/ozy/wedged_app/1.0");
+
+        std::fs::create_dir_all(install_dir.parent().unwrap()).expect("cache dir");
+        std::os::unix::fs::symlink(home.path().join("gone"), &install_dir).expect("symlink");
+
+        set_home(home.path());
+        fake_app(
+            "wedged_app",
+            "1.0",
+            Box::new(FakeInstaller {
+                delay: std::time::Duration::ZERO,
+            }),
+        )
+        .ensure_installed()
+        .expect("installing over a dangling symlink");
+
+        assert!(
+            install_dir.join("marker").is_file(),
+            "the install did not replace the dangling symlink"
         );
     }
 }
