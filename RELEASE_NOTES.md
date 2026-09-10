@@ -2,6 +2,11 @@
 
 All changes are in the [Releases](https://github.com/aquanauts/ozy/releases).
 
+### 0.2.2
+* Properly re-check install after acquiring a lock
+* Ensure we avoid a situation where manual intervention would be required to recover a failed install
+* Improved test hygiene
+
 ### [0.2.1](https://github.com/aquanauts/ozy/releases/tag/v0.2.1)
 * Fix up CI - no code change
 
